@@ -1,0 +1,83 @@
+Segmentos livres da heap:
+(10, 22)
+Segmentos livres da heap:
+(31, 1)
+Segmentos livres da heap:
+Segmentos livres da heap:
+(0, 1)
+(3, 1)
+(6, 1)
+(9, 1)
+(12, 1)
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(3, 1)
+(6, 1)
+(9, 1)
+(12, 1)
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(6, 1)
+(9, 1)
+(12, 1)
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(9, 1)
+(12, 1)
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(12, 1)
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(15, 1)
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(18, 1)
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(21, 1)
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(24, 1)
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(27, 1)
+(30, 1)
+Segmentos livres da heap:
+(30, 1)
+Segmentos livres da heap:
