@@ -1,6 +1,0 @@
-.gitignore
-*.o
-.vscode/*
-.git/*
-vgcore*
-_minted*/*
