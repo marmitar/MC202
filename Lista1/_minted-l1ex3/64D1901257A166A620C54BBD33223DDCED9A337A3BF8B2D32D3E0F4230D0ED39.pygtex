@@ -1,0 +1,4 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{typedef} \PYG{k}{struct} \PYG{p}{\PYGZob{}}
+\PYG{p}{\PYGZcb{}} \PYG{n}{Struct}\PYG{p}{;}
+\end{Verbatim}

@@ -1,0 +1,97 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/* Garante que a fila inicie vazia. */}
+\PYG{k+kt}{void} \PYG{n+nf}{fila\PYGZus{}criar}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{tamanho} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio} \PYG{o}{=} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fim} \PYG{o}{=} \PYG{n+nb}{NULL}\PYG{p}{;} \PYG{c+cm}{/* atribuição dupla */}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Garante que não ocorra vazamento da memória. */}
+\PYG{k+kt}{void} \PYG{n+nf}{fila\PYGZus{}destruir}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+
+    \PYG{c+cm}{/* percorre a fila */}
+    \PYG{n}{No} \PYG{o}{*}\PYG{n}{ptr} \PYG{o}{=} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio}\PYG{p}{;}
+    \PYG{k}{while}\PYG{p}{(}\PYG{n}{ptr} \PYG{o}{!=} \PYG{n+nb}{NULL}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{c+cm}{/* liberando toda a memória de cada nó */}
+        \PYG{n}{free}\PYG{p}{(}\PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{registro}\PYG{p}{.}\PYG{n}{campo3}\PYG{p}{);} \PYG{c+cm}{/* Ou isso é tratado pelo usuário? */}
+        \PYG{n}{free}\PYG{p}{(}\PYG{n}{ptr}\PYG{p}{);}
+        \PYG{n}{ptr} \PYG{o}{=} \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/* zera a lista para evitar erros */}
+    \PYG{n}{fila\PYGZus{}criar}\PYG{p}{(}\PYG{n}{fila}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Adiciona um novo registro na fila. */}
+\PYG{k+kt}{void} \PYG{n+nf}{fila\PYGZus{}enfileirar}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila} \PYG{p}{,} \PYG{n}{Registro}  \PYG{n}{registro}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{c+cm}{/* novo no, já inicializado com zeros */}
+    \PYG{n}{No} \PYG{o}{*}\PYG{n}{novo} \PYG{o}{=} \PYG{p}{(}\PYG{n}{No} \PYG{o}{*}\PYG{p}{)} \PYG{n}{calloc}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{k}{sizeof}\PYG{p}{(}\PYG{n}{No}\PYG{p}{));}
+    \PYG{n}{novo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{registro} \PYG{o}{=} \PYG{n}{registro}\PYG{p}{;}
+
+    \PYG{c+cm}{/* insere o nó */}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fim} \PYG{o}{==} \PYG{n+nb}{NULL}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio} \PYG{o}{=} \PYG{n}{novo}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}} \PYG{k}{else} \PYG{p}{\PYGZob{}}
+        \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fim}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo} \PYG{o}{=} \PYG{n}{novo}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/* atualiza o ponteiro para o final */}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{fim} \PYG{o}{=} \PYG{n}{novo}\PYG{p}{;}
+    \PYG{c+cm}{/* e o tamanho */}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{tamanho}\PYG{o}{++}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Remove o elemento mais antigo da fila. */}
+\PYG{n}{Registro} \PYG{n+nf}{fila\PYGZus{}desenfileirar}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{c+cm}{/* registro que deve ser retornado */}
+    \PYG{n}{Registro} \PYG{n}{resposta}\PYG{p}{;}
+    \PYG{c+cm}{/* ponteiro para o nó que deve ser removido */}
+    \PYG{n}{No} \PYG{o}{*}\PYG{n}{ptr} \PYG{o}{=} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio}\PYG{p}{;}
+
+    \PYG{c+cm}{/* ERRO: lista vazia */}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{ptr} \PYG{o}{==} \PYG{n+nb}{NULL}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo1} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{;}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo2} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{1.0}\PYG{p}{;}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo3} \PYG{o}{=} \PYG{n+nb}{NULL}\PYG{p}{;}
+        \PYG{k}{return} \PYG{n}{resposta}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/* pega o registro */}
+    \PYG{n}{resposta} \PYG{o}{=} \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{registro}\PYG{p}{;}
+    \PYG{c+cm}{/* remove o nó da fila */}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio} \PYG{o}{=} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{p}{;}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{tamanho}\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{p}{;}
+    \PYG{c+cm}{/* e libera a memória */}
+    \PYG{n}{free}\PYG{p}{(}\PYG{n}{ptr}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{resposta}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Pega o segundo elemento mais antigo da fila. */}
+\PYG{n}{Registro} \PYG{n+nf}{fila\PYGZus{}pegar\PYGZus{}proximo}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{Registro} \PYG{n}{resposta}\PYG{p}{;}
+    \PYG{n}{No} \PYG{o}{*}\PYG{n}{ptr} \PYG{o}{=} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{inicio}\PYG{p}{;}
+
+    \PYG{c+cm}{/* ERRO: lista vazia ou com apenas um elemento */}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{ptr} \PYG{o}{==} \PYG{n+nb}{NULL} \PYG{o}{||} \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo} \PYG{o}{==} \PYG{n+nb}{NULL}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo1} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{;}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo2} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{1.0}\PYG{p}{;}
+        \PYG{n}{resposta}\PYG{p}{.}\PYG{n}{campo3} \PYG{o}{=} \PYG{n+nb}{NULL}\PYG{p}{;}
+        \PYG{k}{return} \PYG{n}{resposta}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+cm}{/* pega o registro */}
+    \PYG{n}{resposta} \PYG{o}{=} \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{registro}\PYG{p}{;}
+    \PYG{c+cm}{/* remove o nó */}
+    \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo} \PYG{o}{=} \PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{p}{;}
+    \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{tamanho}\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{p}{;}
+    \PYG{c+cm}{/* e libera a memória */}
+    \PYG{n}{free}\PYG{p}{(}\PYG{n}{ptr}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{proximo}\PYG{p}{);}
+
+    \PYG{k}{return} \PYG{n}{resposta}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Tamanho da fila */}
+\PYG{k+kt}{int} \PYG{n+nf}{fila\PYGZus{}tamanho}\PYG{p}{(}\PYG{n}{Fila} \PYG{o}{*}\PYG{n}{fila}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{k}{return} \PYG{n}{fila}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{tamanho}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

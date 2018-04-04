@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/* Inicialização dos valores, zerando\PYGZhy{}os. */}
+\PYG{k+kt}{void}  \PYG{n+nf}{vetor\PYGZus{}inicializar}\PYG{p}{(}\PYG{k+kt}{int} \PYG{o}{**}\PYG{n}{vec} \PYG{p}{,} \PYG{k+kt}{int}  \PYG{n}{tamanho}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{k+kt}{size\PYGZus{}t} \PYG{n}{i}\PYG{p}{;}
+    \PYG{c+cm}{/* percorre o vetor de ponteiros */}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{tamanho}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{c+cm}{/* e inicializa o valor para onde está sendo apontado */}
+        \PYG{o}{*}\PYG{p}{(}\PYG{n}{vec}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+cm}{/* Libera a memória. */}
+\PYG{k+kt}{void}  \PYG{n+nf}{vetor\PYGZus{}desalocar}\PYG{p}{(}\PYG{k+kt}{int} \PYG{o}{**}\PYG{n}{vec} \PYG{p}{,} \PYG{k+kt}{int}  \PYG{n}{tamanho}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{k+kt}{size\PYGZus{}t} \PYG{n}{i}\PYG{p}{;}
+    \PYG{c+cm}{/* percorre o vetor */}
+    \PYG{k}{for} \PYG{p}{(}\PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;} \PYG{n}{i} \PYG{o}{\PYGZlt{}} \PYG{n}{tamanho}\PYG{p}{;} \PYG{n}{i}\PYG{o}{++}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+        \PYG{c+cm}{/*  liberando a memória de cada ponteiro */}
+        \PYG{n}{free}\PYG{p}{(}\PYG{n}{vec}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]);}
+    \PYG{p}{\PYGZcb{}}
+    \PYG{c+cm}{/* e então libera a do vetor */}
+    \PYG{n}{free}\PYG{p}{(}\PYG{n}{vec}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

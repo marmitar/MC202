@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/* Posição no mapa (forma matricial) */}
+\PYG{k}{typedef} \PYG{k}{struct} \PYG{n}{\PYGZus{}posicao} \PYG{p}{\PYGZob{}}
+    \PYG{k+kt}{unsigned} \PYG{n}{linha}\PYG{p}{,} \PYG{n}{coluna}\PYG{p}{;}
+    \PYG{k}{struct} \PYG{n}{\PYGZus{}posicao} \PYG{o}{*}\PYG{n}{proxima}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}} \PYG{o}{*}\PYG{n}{Posicao}\PYG{p}{;}
+
+\PYG{c+cm}{/* Pilha de posições */}
+\PYG{k}{typedef} \PYG{k}{struct} \PYG{n}{\PYGZus{}pilha} \PYG{p}{\PYGZob{}}
+    \PYG{n}{Posicao} \PYG{n}{topo}\PYG{p}{;} \PYG{c+cm}{/* topo da pilha */}
+    \PYG{k+kt}{size\PYGZus{}t} \PYG{n}{tamanho}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}} \PYG{o}{*}\PYG{n}{Pilha}\PYG{p}{;}
+\end{Verbatim}
