@@ -1,4 +1,8 @@
 function baixar {
+    if [[ -z "$1" ]]; then
+        echo "Falta qual lab"
+    fi
+
     if [[ -z "$2" ]]; then
         fim=5
     else
@@ -18,6 +22,13 @@ function baixar {
 }
 
 function testar {
+    if [[ -z "$1" ]]; then
+        echo "Falta qual lab"
+    fi
+    if [[ -z "$2" ]]; then
+        echo "Falta qual arquivo"
+    fi
+
     if [[ -z "$3" ]]; then
         fim=5
     else
@@ -34,6 +45,28 @@ function testar {
     done
 
     rm tmp
+}
+
+function memoria {
+    if [[ -z "$1" ]]; then
+        echo "Falta qual lab"
+    fi
+    if [[ -z "$2" ]]; then
+        echo "Falta qual arquivo"
+    fi
+
+    if [[ -z "$3" ]]; then
+        fim=5
+    else
+        fim=$3
+    fi
+
+    i=1
+    while [[ i -le fim ]]; do
+        valgrind ./Lab$1/$2 < Lab$1/in/arq0$i.in > /dev/null
+
+        let i=i+1
+    done
 }
 
 $1 $2 $3 $4
