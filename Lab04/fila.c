@@ -12,6 +12,7 @@ struct _no {
 struct _fila {
     No ini; /* início da fila */
     No fim;
+    unsigned tam;
 };
 
 #define eh_vazio(ptr) \
@@ -26,7 +27,7 @@ static No constroi_no(const void *dado) {
 Fila constroi_fila(void) {
     return (Fila) calloc(1, sizeof(struct _fila));
 }
-void destroi_fila(Fila fila, void (*desaloca(const void *dado))) {
+void destroi_fila(Fila fila, void (*desaloca)(const void *dado)) {
     for (No ptr = fila->ini; ptr; ptr = ptr->prox) {
         desaloca(ptr->dado);
         free(ptr);
@@ -44,6 +45,8 @@ void enfileirar(Fila fila, const void *dado) {
     } else {
         fila->fim = novo;
     }
+
+    fila->tam++;
 }
 void *desenfileirar(Fila fila) {
     if (eh_vazio(fila->fim)) {
@@ -61,5 +64,12 @@ void *desenfileirar(Fila fila) {
         fila->fim = fila->ini = NULL;
     }
 
+    fila->tam--;
     return dado;
 }
+
+unsigned tamanho_fila(Fila fila) {
+    return fila->tam;
+}
+
+#undef eh_vazio
