@@ -1,6 +1,9 @@
+RAIZ=$(git rev-parse --show-toplevel)
+
 function baixar {
     if [[ -z "$1" ]]; then
         echo "Falta qual lab"
+        return 1
     fi
 
     if [[ -z "$2" ]]; then
@@ -14,8 +17,8 @@ function baixar {
 
     i=1
     while [[ i -le fim ]]; do
-        curl -k https://susy.ic.unicamp.br:9999/mc202abc/$1/dados/arq0$i.in -o Lab$1/in/arq0$i.in
-        curl -k https://susy.ic.unicamp.br:9999/mc202abc/$1/dados/arq0$i.res -o Lab$1/res/arq0$i.res
+        curl -k https://susy.ic.unicamp.br:9999/mc202abc/$1/dados/arq0$i.in -o $RAIZ/Lab$1/in/arq0$i.in
+        curl -k https://susy.ic.unicamp.br:9999/mc202abc/$1/dados/arq0$i.res -o $RAIZ/Lab$1/res/arq0$i.res
 
         let i=i+1
     done
@@ -24,9 +27,11 @@ function baixar {
 function testar {
     if [[ -z "$1" ]]; then
         echo "Falta qual lab"
+        return 1
     fi
     if [[ -z "$2" ]]; then
         echo "Falta qual arquivo"
+        return 2
     fi
 
     if [[ -z "$3" ]]; then
@@ -37,8 +42,8 @@ function testar {
 
     i=1
     while [[ i -le fim ]]; do
-        ./Lab$1/$2 < Lab$1/in/arq0$i.in > tmp
-        diff tmp Lab$1/res/arq0$i.res
+        $RAIZ/Lab$1/$2 < $RAIZ/Lab$1/in/arq0$i.in > tmp
+        diff tmp $RAIZ/Lab$1/res/arq0$i.res > /dev/null
         echo "Teste $i: $?"
 
         let i=i+1
@@ -50,9 +55,11 @@ function testar {
 function memoria {
     if [[ -z "$1" ]]; then
         echo "Falta qual lab"
+        return 1
     fi
     if [[ -z "$2" ]]; then
         echo "Falta qual arquivo"
+        return 2
     fi
 
     if [[ -z "$3" ]]; then
@@ -63,7 +70,7 @@ function memoria {
 
     i=1
     while [[ i -le fim ]]; do
-        valgrind ./Lab$1/$2 < Lab$1/in/arq0$i.in > /dev/null
+        valgrind $RAIZ/Lab$1/$2 < $RAIZ/Lab$1/in/arq0$i.in > /dev/null
 
         let i=i+1
     done
