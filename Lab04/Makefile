@@ -14,4 +14,4 @@ participante.o: participante.c participante.h
 	$(CC) participante.c -c $(GFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o lab04

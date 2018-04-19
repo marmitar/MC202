@@ -19,12 +19,12 @@ Participante constroi_part(unsigned id, unsigned habilidade);
 void destroi_part(Participante part);
 
 /*  Realiza a partida entre dois participantes, ajusta suas
- * habilidades, e retorna o ganhador entre eles.
+ * habilidades e retorna o ganhador entre eles.
  */
 Participante partida(Participante part1, Participante part2);
 
 /*  Retorna o número de identificação do participante,
- * passado no construto pelo usuário da biblioteca. */
+ * passado no construtor pelo usuário da biblioteca. */
 unsigned pegar_id(Participante part);
 
 /* Lógica de descanso do participante. */

@@ -16,4 +16,4 @@ lab01.o: lab01.c lab01.h
 	$(CC) lab01.c -c $(GFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o main

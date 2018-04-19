@@ -14,4 +14,4 @@ lab02.o: lab02.c
 	$(CC) lab02.c -c $(GFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o lab02
