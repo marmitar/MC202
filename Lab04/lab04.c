@@ -74,7 +74,7 @@ int main(void) {
         fprintf(stderr, "PRINCIPAL NÃO VAZIA\n");
         return 1;
     }
-    /* a repescagem é forçada a terminar vazia */
+    /* já a repescagem é forçada a terminar vazia */
 
     destroi_fila(principal, NULL);
     destroi_fila(repescagem, NULL);

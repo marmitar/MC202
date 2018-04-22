@@ -1,0 +1,94 @@
+Desfile pode ser realizado:
+Alegoria 23 entra na rua 1 e aguarda.
+Alegoria 13 entra na rua 1 e aguarda.
+Alegoria 8 entra na rua 1 e aguarda.
+Alegoria 20 entra na rua 2 e aguarda.
+Alegoria 50 entra na rua 3 e aguarda.
+Alegoria 25 entra na rua 3 e aguarda.
+Alegoria 48 entra na rua 4 e aguarda.
+Alegoria 49 entra na rua 5 e aguarda.
+Alegoria 42 entra na rua 4 e aguarda.
+Alegoria 41 entra na rua 4 e aguarda.
+Alegoria 44 entra na rua 5 e aguarda.
+Alegoria 46 entra na rua 6 e aguarda.
+Alegoria 27 entra na rua 4 e aguarda.
+Alegoria 40 entra na rua 5 e aguarda.
+Alegoria 5 entra na rua 1 e aguarda.
+Alegoria 17 entra na rua 2 e aguarda.
+Alegoria 19 entra na rua 3 e aguarda.
+Alegoria 21 entra na rua 4 e aguarda.
+Alegoria 33 entra na rua 5 e aguarda.
+Alegoria 47 entra na rua 7 e aguarda.
+Alegoria 43 entra na rua 6 e aguarda.
+Alegoria 45 entra na rua 7 e aguarda.
+Alegoria 7 entra na rua 2 e aguarda.
+Alegoria 1 desfila.
+Alegoria 36 entra na rua 6 e aguarda.
+Alegoria 29 entra na rua 5 e aguarda.
+Alegoria 39 entra na rua 7 e aguarda.
+Alegoria 35 entra na rua 6 e aguarda.
+Alegoria 22 entra na rua 5 e aguarda.
+Alegoria 2 desfila.
+Alegoria 30 entra na rua 6 e aguarda.
+Alegoria 16 entra na rua 3 e aguarda.
+Alegoria 32 entra na rua 7 e aguarda.
+Alegoria 26 entra na rua 6 e aguarda.
+Alegoria 15 entra na rua 3 e aguarda.
+Alegoria 3 desfila.
+Alegoria 11 entra na rua 3 e aguarda.
+Alegoria 4 desfila.
+Alegoria 5 sai da rua 1 e desfila.
+Alegoria 18 entra na rua 4 e aguarda.
+Alegoria 24 entra na rua 6 e aguarda.
+Alegoria 10 entra na rua 3 e aguarda.
+Alegoria 31 entra na rua 7 e aguarda.
+Alegoria 14 entra na rua 4 e aguarda.
+Alegoria 38 entra na rua 8 e aguarda.
+Alegoria 12 entra na rua 4 e aguarda.
+Alegoria 9 entra na rua 3 e aguarda.
+Alegoria 34 entra na rua 8 e aguarda.
+Alegoria 6 desfila.
+Alegoria 7 sai da rua 2 e desfila.
+Alegoria 8 sai da rua 1 e desfila.
+Alegoria 9 sai da rua 3 e desfila.
+Alegoria 10 sai da rua 3 e desfila.
+Alegoria 11 sai da rua 3 e desfila.
+Alegoria 12 sai da rua 4 e desfila.
+Alegoria 13 sai da rua 1 e desfila.
+Alegoria 14 sai da rua 4 e desfila.
+Alegoria 15 sai da rua 3 e desfila.
+Alegoria 16 sai da rua 3 e desfila.
+Alegoria 17 sai da rua 2 e desfila.
+Alegoria 18 sai da rua 4 e desfila.
+Alegoria 19 sai da rua 3 e desfila.
+Alegoria 20 sai da rua 2 e desfila.
+Alegoria 21 sai da rua 4 e desfila.
+Alegoria 22 sai da rua 5 e desfila.
+Alegoria 23 sai da rua 1 e desfila.
+Alegoria 24 sai da rua 6 e desfila.
+Alegoria 25 sai da rua 3 e desfila.
+Alegoria 26 sai da rua 6 e desfila.
+Alegoria 27 sai da rua 4 e desfila.
+Alegoria 28 desfila.
+Alegoria 29 sai da rua 5 e desfila.
+Alegoria 30 sai da rua 6 e desfila.
+Alegoria 31 sai da rua 7 e desfila.
+Alegoria 32 sai da rua 7 e desfila.
+Alegoria 33 sai da rua 5 e desfila.
+Alegoria 34 sai da rua 8 e desfila.
+Alegoria 35 sai da rua 6 e desfila.
+Alegoria 36 sai da rua 6 e desfila.
+Alegoria 37 desfila.
+Alegoria 38 sai da rua 8 e desfila.
+Alegoria 39 sai da rua 7 e desfila.
+Alegoria 40 sai da rua 5 e desfila.
+Alegoria 41 sai da rua 4 e desfila.
+Alegoria 42 sai da rua 4 e desfila.
+Alegoria 43 sai da rua 6 e desfila.
+Alegoria 44 sai da rua 5 e desfila.
+Alegoria 45 sai da rua 7 e desfila.
+Alegoria 46 sai da rua 6 e desfila.
+Alegoria 47 sai da rua 7 e desfila.
+Alegoria 48 sai da rua 4 e desfila.
+Alegoria 49 sai da rua 5 e desfila.
+Alegoria 50 sai da rua 3 e desfila.
