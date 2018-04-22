@@ -53,7 +53,7 @@ unsigned destroi_pilha(Pilha pilha, void (*desaloca)(void *dado)) {
         destruidos++;
     }
 
-    /* libera a memória da pilha, em si */
+    /* libera a memória da pilha em si */
     pilha->topo = NULL; /* evitar reutilização */
     free(pilha);
 

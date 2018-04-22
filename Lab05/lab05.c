@@ -13,7 +13,7 @@
 typedef enum {DESFILA, ENTRA, SAI} Operacao;
 
 /* Registro de movimento.
- *  Pode ser um desfile de uma alegoria, a entrada ou a saída de uma alegoria de uma perpendicular.
+ *  Pode ser um desfile de uma alegoria, a entrada ou a saída de uma alegoria por uma perpendicular.
  */
 typedef struct _mov {
     Operacao operacao;
@@ -22,8 +22,8 @@ typedef struct _mov {
 } Movimento;
 
 /* Construtor de um ponteiro para movimento.
- *  Recebe número variável de argumentos, pois operações diferentes
- * têm necessidades diferentes.
+ *  Recebe um número variável de argumentos, pois operações diferentes
+ * usam dados diferentes.
  */
 Movimento *novo_mov(Operacao op, ...);
 /* Imprime o movimento na saída padrão. */
