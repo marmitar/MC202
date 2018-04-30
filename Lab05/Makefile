@@ -1,6 +1,6 @@
 CC=gcc
-GFLAGS=-ansi -Wall -pedantic-errors -g -lm -Werror
-# GFLAGS=-ggdb3 -Wall -Werror -pedantic-errors -lm -std=gnu11
+GFLAGS=-ansi -Wall -pedantic-errors -g -lm -Werror -pg
+# GFLAGS=-ggdb3 -Wall -Werror -pedantic-errors -lm -std=gnu11 -O2 -pg
 
 all: main
 
@@ -12,7 +12,6 @@ lab05.o: lab05.c
 
 pilha.o: pilha.c pilha.h
 	$(CC) pilha.c -c $(GFLAGS)
-
 
 clean:
 	rm -f main *.o
