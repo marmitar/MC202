@@ -12,7 +12,7 @@ Saída: Permutação ordenada S de V
         -- conta as repetiçoes do dígito
         C[r] ← [0 ... 0]
         para i de 0 até n - 1:
-            d ← (n // pow(r, D)) mod r
+            d ← (n / pow(r, D)) mod r
             C[d] ← C[d] + 1
 
         -- acumula o vetor de contagem
@@ -21,6 +21,6 @@ Saída: Permutação ordenada S de V
 
         -- monta a saída de forma ordenada
         para i de 0 até n - 1:
-            d ← (n // pow(r, D)) mod r
+            d ← (n / pow(r, D)) mod r
             S[C[d]] ← V[i]
             C[d] ← C[d] + 1

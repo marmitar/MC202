@@ -12,7 +12,7 @@ para se construir o heap de um vetor fica:
     O\left(n \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \\
     O\left(n \sum_{h = 0}^{\infty} h \left(\frac{d - 1}{d}\right)^h\right)
 \end{gather*}
-Mas, sabemos que ara $0 < x < 1$:
+Mas, sabemos que para $0 < x < 1$:
 $$\sum_{n = 0}^\infty x^n = \lim_{n\to\infty} S(n) =  \lim_{n\to\infty} \frac{1-x^n}{1-x} = \frac{1}{1-x}$$
 Derivando ambos os lados:
 \begin{align*}
