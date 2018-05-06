@@ -1,0 +1,39 @@
+Algoritmo BuscaTernária:
+
+Entradas: Vetor ordenado V de tamanho n;
+          elemento E buscado
+
+Saída: Posição P de E
+
+-- busca ternária
+d ← 3
+
+-- limites inferior e superior da busca
+l ← 0
+r ← n - 1
+enquanto l <= r:
+
+    -- em cada partição do vetor
+    para k de 1 até d:
+
+        -- como o início da partição já foi
+        -- testado na iteração anterior, o
+        -- elemento deve estar na partição se
+        -- for menor que o final da partição
+        se V[l + k * (r - l)/d] < E:
+            -- atualiza os limites
+            novo_l ← (k - 1)(r - l)/d
+            r ← k * (r - l)/d
+            l ← novo_l
+            encerra laço
+
+        -- encontrou
+        se V[l + k * (r - l)/d] = E:
+            P ← V[l + k * (r - l)/d]
+            encerra função
+
+    se laço não foi encerrado:
+        lança erro
+
+-- não achou
+lança erro

@@ -1,0 +1,3 @@
+Para $k = n^l - 1$, podemos usar o \textbf{\textit{Radix Sort}} com $r = n$ e, claro, $q = k + 1 = n^l$, então a complexidade fica
+$O\left(\frac{\lg n^l}{\lg n}(n + n)\right) = O(l \cdot 2n) = O(l \times n)$. Nesse caso, ara representar $q = n^l$ valores diferentes com a
+base $r = n$ precisaremos de $\log_r n^l = \log_n n^l = l$ dígitos. Considerando isso e $//$ a operação de divisão de inteiros, então o algoritmo fica:

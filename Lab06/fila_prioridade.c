@@ -151,6 +151,10 @@ Item pegar_proximo(FilaPrio maxheap) {
     return proximo;
 }
 
+bool esta_vazia(FilaPrio maxheap) {
+    return eh_vazio(maxheap) || maxheap->tamanho == 0;
+}
+
 #undef eh_vazio
 #undef pai
 #undef filho_esq

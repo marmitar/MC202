@@ -1,0 +1,14 @@
+.git/*
+.vscode/*
+_minted*/*
+*.o
+tmp
+*/tmp
+*/main
+*/gmon.out
+*/profiling
+*/build/*
+*/dist/*
+*/__pycache__/*
+*/*.egg-info/*
+gmon.out

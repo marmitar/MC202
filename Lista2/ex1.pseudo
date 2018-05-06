@@ -1,0 +1,26 @@
+Algoritmo RadixSort:
+
+Entradas: Vetor V de tamanho n
+Saída: Permutação ordenada S de V
+
+    -- base (radix)
+    r ← n
+
+    -- cada dígito
+    para D de 0 até l - 1:
+
+        -- conta as repetiçoes do dígito
+        C[r] ← [0 ... 0]
+        para i de 0 até n - 1:
+            d ← (n // pow(r, D)) mod r
+            C[d] ← C[d] + 1
+
+        -- acumula o vetor de contagem
+        para i de 1 até r:
+            C[i] ← C[i] + C[i - 1]
+
+        -- monta a saída de forma ordenada
+        para i de 0 até n - 1:
+            d ← (n // pow(r, D)) mod r
+            S[C[d]] ← V[i]
+            C[d] ← C[d] + 1

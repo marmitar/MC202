@@ -1,0 +1,31 @@
+Considerando o heap cheio, cada nó do nível $n$ tem $d$ filhos no nível $n+1$, sendo que o primeiro
+nó de $n$ tem como filhos os $d$ primeiros nós de $n+1$ ($1$, $2$ até $d$), o segundo tem os $d$ seguintes
+($d+1$, $d+2$ até $2d$), e o $m$-ésimo ($1 \leqslant m \leqslant n$) tem $(m-1)d+1$, $(m-1)d+2$ até $m\ d$,
+e, seguindo a mesma ideia, o pai de $m$ é o $\lceil m/d \rceil$-ésimo termo do nível $n-1$.
+Como o número de elementos de cada nível $n$ de um heap $d$-ário cresce como uma série geométrica do tipo
+$a_n = a_0\ r^{n-1}$, em que $a_0 = 1$ e $1 < r = d$, o índice geral de um elemento $m$ do nível $n$ é $S(n-1)+m$,
+sendo $S(n) = \sum_{i = 1}^{n} a_i = \frac{a_0\ (1-r^n)}{1-r}$ a soma geométrica dos $n$ primeiros termos, ou seja, a soma dos $n$
+primeiros níveis. Então, o $k-ésimo$ filho de $i = \frac{1-d^{n-1}}{1-d} + m - 1$ (o $-1$ serve apenas para ajustar para a
+indexação por zero) é:
+\begin{align*}
+    filho(i, k) &= \frac{1-d^n}{1-d} + d\cdot(m-1) + k - 1 \\
+    &= \frac{(1+d-d)-d\ d^{n-1}}{1-d} + d\ (m-1) + k - 1 \\
+    &= \frac{1-d}{1-d} + d\ \frac{1-d^{n-1}}{1-d} + d\ (m-1) + k - 1 \\
+    &= 1 + d\ i + k - 1 \\
+    &= d\ i + k
+\end{align*}
+E o pai:
+\begin{align*}
+    pai(i) &= \frac{1-d^{n-2}}{1-d} + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= \frac{1-d^{n-1}/d}{1-d} + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= \frac{d-d^{n-1}}{d\ (1-d)} + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= \frac{1}{d}\frac{d-1+1-d^{n-1}}{1-d} + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= \frac{1}{d}\left(\frac{d-1}{1-d}+\frac{1-d^{n-1}}{1-d}\right) + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= -\frac{1}{d}+\frac{(1-d^{n-1})/(1-d)}{d} + \left\lceil\frac{m}{d}\right\rceil - 1 \\
+    &= \left\lceil\frac{(1-d^{n-1})/(1-d)}{d} + \frac{m}{d} -\frac{1}{d}\right\rceil - 1 \\
+    &= \left\lceil \frac{i}{d} \right\rceil - 1 = \left\lceil \frac{i}{d} - 1 \right\rceil = \left\lceil \frac{(i-d)}{d} \right\rceil \\
+    &= \left\lfloor \frac{(i-d) + d - 1}{d} \right\rfloor \\
+    &= \left\lfloor \frac{i - 1}{d} \right\rfloor
+\end{align*}
+Por fim, fica que o $k$-ésimo filho de $i$, se existente, é (com o ajuste de indexação) $filho(i, k) = d\cdot i+k$, com $k \in [1, d]$,
+e $pai(i) = (i-1) / d$.

@@ -1,0 +1,20 @@
+Para que $O(n)$, precisamos escolher a base $r$ com complexidade seja igual ou menor a $O(n)$, para que $O(r+n) = O(n)$,
+mas que a complexidade de $\log r$ acompanhe a de $\log q$ para que $O\left(\frac{\lg q}{\lg r}\right) = O(1)$,
+sendo $q$ a quantidade de valores possíveis diferentes em $V$.
+A solução mais simples é com $q$ e $r$ constantes, então o algoritmo fica $O\left(\frac{A}{B}(C+n)\right) = O(n)$.
+Depois temos também $q = n^a$ e $r = n$, que resulta em
+$O\left(\frac{a \lg n}{\lg n}(n + n)\right) = O(n)$.
+Além disso, tem as funções logarítmicas $q = (\lg n)^s$ e $r = (\lg n)^t$,
+que dão $O\left(\frac{s\lg(\lg n)}{t\lg(\lg n)}((\lg n))^t + n)\right)
+= O((\lg n)^t + n)$, mas:
+\begin{align*}
+    \lim_{n\to\infty} \frac{n}{(\lg n)^A}
+    &= \lim_{n\to\infty} \frac{1}{A\ (\lg n)^{A-1}\ (1/n \ln 2)} \\
+    &= \lim_{n\to\infty} \frac{\ln 2}{A} \frac{n}{(\ln n)^{A-1}} \\
+    &\ \ \ \ \ \ ...\\
+    &= \lim_{n\to\infty} \frac{(\ln 2)^A}{A!} \frac{n}{\ln n} \\
+    &= \frac{(\ln 2)^A}{A!} \lim_{n\to\infty} \frac{1}{1/n} \\
+    &= \frac{(\ln 2)^A}{A!} \lim_{n\to\infty} n = +\infty
+\end{align*}
+Portanto, $O(n)$ tem um crescimento assintoticamente maior que $O((\lg n)^t)$ e então $O((\lg n)^t + n) = O(n)$.
+Esses três grupos de funções são as soluções que resolvem o algoritmo com complexidade linear, sendo que $k = q - 1$.

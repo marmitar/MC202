@@ -33,8 +33,9 @@ unsigned destroi_filaprio(FilaPrio);
  * Funcionalidades da PILHA!!! de prioridades. *
  ********************************************/
 bool novo_item(FilaPrio, ...);
-bool inserir_item(FilaPrio, Item);
+// bool inserir_item(FilaPrio, Item);
 Item pegar_proximo(FilaPrio);
 Item ver_proximo(FilaPrio);
+bool esta_vazia(FilaPrio);
 
 #endif

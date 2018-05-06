@@ -1,0 +1,28 @@
+Para esse algoritmo, consideremos o pior caso, que é quando cada nó analisado deve
+descer até o nível mais baixo. Então, em um heap cheio, cada altura $h$ do heap tem no máximo
+$\left\lceil n\ (1 - 1/d)^{h+1}\right\rceil$ elementos e cada um deles deve descer $h$ nós,
+o que gasta $O(h)$ em tempo, e são $\left\lfloor\log_d n\right\rfloor$ níveis de altura. Assim a complexidade
+para se construir o heap de um vetor fica:
+\begin{gather*}
+    \sum_{h = 0}^{\left\lfloor\log_d n\right\rfloor} \left\lceil n\ (1 - 1/d)^{h+1}\right\rceil\ O(h) \\
+    O\left( \sum_{h = 0}^{\left\lfloor\log_d n\right\rfloor} \left\lceil n\ (1 - 1/d)^{h+1}\right\rceil\ h\right) \\
+    O\left(\sum_{h = 0}^{\log_d n} n\ (1 - 1/d)^{h+1} h\right) \\
+    O\left(n \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^{h+1}\right) \\
+    O\left(n \frac{d-1}{d} \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \\
+    O\left(n \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \\
+    O\left(n \sum_{h = 0}^{\infty} h \left(\frac{d - 1}{d}\right)^h\right)
+\end{gather*}
+Mas, sabemos que ara $0 < x < 1$:
+$$\sum_{n = 0}^\infty x^n = \lim_{n\to\infty} S(n) =  \lim_{n\to\infty} \frac{1-x^n}{1-x} = \frac{1}{1-x}$$
+Derivando ambos os lados:
+\begin{align*}
+    \sum_{n = 0}^\infty n x^{n-1} &= (-1) \frac{1}{(1-x)^2} (-1) = \frac{1}{(1-x)^2} \\
+    \sum_{n = 0}^\infty n x^n &= \frac{x}{(1-x)^2}
+\end{align*}
+Aplicando esse resultado com $n = h$ e $x = \frac{d-1}{d}$ na equação incial:
+\begin{gather*}
+    O\left(n \frac{(d-1)/d}{(1 - (d-1)/d)^2}\right) \\
+    O\left(n\ d(d-1)\right) \\
+    O(n)
+\end{gather*}
+Que mostra que o algoritmo tem complexidade linear, já que $d$ é constante para o heap escolhido.

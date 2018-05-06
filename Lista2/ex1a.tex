@@ -1,0 +1,5 @@
+Para um vetor $V$ com $n$ inteiros entre $0$ e $k$, isso é, $q=k+1$ valores possíveis, o algoritmo mais apropriado seria o \textbf{\textit{Radix Sort}}.
+Isso é porque esse algoritmo analisa cada elemento como dígitos de base $r$ e ordena o vetor dígito a dígito de maneira estável,
+começando pelo menos significativo. Com isso, a complexidade da ordenação para cada dígito é no mínimo $r+n$, porque
+tem que analisar o vetor com $n$ elementos e analisar cada um dos $r$ valores possíveis da base, sendo $\log_r q$ dígitos,
+o que resulta em uma complexidade final de $O(\log_r q\ (r+n)) = O\left(\frac{\lg q}{\lg r} (r+n)\right)$.
