@@ -61,40 +61,32 @@ int main(void) {
 
     int clocks = 0;
     int *processos = calloc(N, sizeof(int));
-    FilaPrio *dependentes = malloc(N * sizeof(FilaPrio));
-    for (int n = 0; n < N; n++) {
-        dependentes[n] = constroi_filaprio(P / 8, insere_proc, compara_prio, destroi_proc);
-    }
+    // FilaPrio *dependentes = malloc(N * sizeof(FilaPrio));
+    // for (int n = 0; n < N; n++) {
+    //     dependentes[n] = constroi_filaprio(P / 8, insere_proc, compara_prio, destroi_proc);
+    // }
+    Processo *dependentes = calloc(N, sizeof(Processo));
+    int tamanho_dep = 0;
     int *tempos = calloc(N, sizeof(int));
-    
-    bool acabou = false;
-    for (Processo proximo = pegar_proximo(em_espera); ! acabou;) {
-        bool fim = false;
+
+    for (Processo proximo = pegar_proximo(em_espera); proximo != NULL;) {
+        bool depende = false;
         int min = 0;
-        for (int n = 0; !fim && n < N; n++) {
-            if (processos[n] == 0) {
-                if (esta_vazia(dependentes[n])) {
-                    processos[n] = proximo->id;
-                    tempos[n] = proximo->clocks;
-                    inicia_proc(processos[n], clocks);
-                    destroi_proc(proximo);
-                    fim = true;
-                } else {
-                    Processo dependente = pegar_proximo(dependentes[n]);
-                    processos[n] = dependente->id;
-                    tempos[n] = dependente->clocks;
-                    inicia_proc(processos[n], clocks);
-                    destroi_proc(dependente);
+        for (int n = N-1; !depende && n >= 0; n--) {
+            if (processos[n] != 0) {
+                if (processos[n] == proximo->dependencia) {
+                    dependentes[tamanho_dep] = proximo;
+                    tamanho_dep++;
+                    depende = true;
+                } else if (tempos[n] <= tempos[min]) {
+                    min = n;
                 }
-            } else if (processos[n] == proximo->dependencia) {
-                novo_item(dependentes[n], proximo);
-                fim = true;
-            } else if (tempos[n] < tempos[min]) {
+            } else {
                 min = n;
             }
         }
 
-        if (! fim) {
+        if (! depende) {
             clocks += tempos[min];
             for (int n = 0; n < N; n++) {
                 tempos[n] -= tempos[min];
@@ -103,9 +95,17 @@ int main(void) {
                     processos[n] = 0;
                 }
             }
-        } else {
-            proximo = pegar_proximo(em_espera);
+
+            processos[min] = proximo->id;
+            tempos[min] = proximo->clocks;
+
+            while (tamanho_dep > 0) {
+                tamanho_dep--;
+                inserir_item(em_espera, dependentes[tamanho_dep]);
+            }
         }
+
+        proximo = pegar_proximo(em_espera);
     }
 
     return 0;
