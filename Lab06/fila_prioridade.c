@@ -4,31 +4,29 @@
  * Lab 06
  */
 
-/******************************************************
- * Implementação da fila de prioridades de processos. *
- ******************************************************/
+/*****************************************
+ * Implementação da fila de prioridades. *
+ *****************************************/
 #include "fila_prioridade.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdarg.h>
 
 struct _max_heap {
     Item *heap;
     unsigned tamanho;
     unsigned capacidade;
 
-    Construtor construtor;
     Destrutor destrutor;
     Comparador comparador;
 };
 
+/* ponteiro vazio */
 #define eh_vazio(ptr) \
     (ptr == NULL)
 
 #define pai(i) \
-    ((i-1) / 2)
-
+    (((int) i-1) / 2)
 #define filho_esq(i) \
     (2*i + 1)
 #define filho_dir(i) \
@@ -39,16 +37,30 @@ struct _max_heap {
     maxheap->heap[pai(filho)] = maxheap->heap[filho]; \
     maxheap->heap[filho] = pai 
 
+/* compara duas posições do heap */
 #define compara(maxheap, i, j) \
     maxheap->comparador(maxheap->heap[i], maxheap->heap[j])
 
+/* teste se um nó é maior que o pai */
 #define maior_que_pai(maxheap, filho) \
     (compara(maxheap, filho, pai(filho)) > 0)
 
-#define maior_filho(maxheap, pai) \
-    ((compara(maxheap, filho_dir(pai), filho_esq(pai)) > 0)? filho_dir(pai) : filho_esq(pai))
+/* encontra o maior item entre o pai e os dois filhos */
+#define maior_item(maxheap, pai) \
+    ((compara(maxheap, filho_dir(pai), pai) > 0)? \
+        ((compara(maxheap, filho_dir(pai), filho_esq(pai)) > 0)? \
+            filho_dir(pai) : \
+            ((compara(maxheap, filho_esq(pai), pai) > 0)? \
+                filho_esq(pai) : \
+                filho_dir(pai) \
+            ) \
+        ) : \
+        ((compara(maxheap, filho_esq(pai), pai) > 0 )? \
+            filho_esq(pai) : pai \
+        ) \
+    )
 
-FilaPrio constroi_filaprio(unsigned capacidade_inicial, Construtor construtor, Comparador comparador, Destrutor destrutor) {
+FilaPrio constroi_filaprio(unsigned capacidade_inicial, Comparador comparador, Destrutor destrutor) {
     FilaPrio nova = (FilaPrio) malloc(sizeof(struct _max_heap));
     if (eh_vazio(nova)) {
         return NULL;
@@ -63,7 +75,6 @@ FilaPrio constroi_filaprio(unsigned capacidade_inicial, Construtor construtor, C
 
     nova->tamanho = 0;
 
-    nova->construtor = construtor;
     nova->comparador = comparador;
     nova->destrutor = destrutor;
     return nova;
@@ -71,6 +82,7 @@ FilaPrio constroi_filaprio(unsigned capacidade_inicial, Construtor construtor, C
 
 unsigned destroi_filaprio(FilaPrio maxheap) {
     unsigned destruidos = 0;
+    unsigned i;
 
     if (eh_vazio(maxheap)) {
         return destruidos;
@@ -81,22 +93,28 @@ unsigned destroi_filaprio(FilaPrio maxheap) {
         return destruidos;
     }
 
-    for (unsigned i = 0; i < maxheap->capacidade; i++) {
+    for (i = 0; i < maxheap->tamanho; i++) {
         maxheap->destrutor(maxheap->heap[i]);
         destruidos++;
     }
 
+    free(maxheap->heap);
+    free(maxheap);
     return destruidos;
 }
 
 bool inserir_item(FilaPrio maxheap, Item item) {
+    unsigned k;
+
     if (eh_vazio(maxheap)) {
         return false;
     }
 
+    /* duplica a capacidade, se necessário */
     if (maxheap->tamanho == maxheap->capacidade) {
+        Item *novo_heap;
         maxheap->capacidade *= 2;
-        Item *novo_heap = (Item *) realloc(maxheap->heap, maxheap->capacidade);
+        novo_heap = (Item *) realloc(maxheap->heap, maxheap->capacidade);
 
         if (eh_vazio(novo_heap)) {
             return false;
@@ -105,54 +123,62 @@ bool inserir_item(FilaPrio maxheap, Item item) {
         maxheap->heap = novo_heap;
     }
 
+    /* insere item */
     maxheap->heap[maxheap->tamanho++] = item;
 
-    for (unsigned k = maxheap->tamanho-1; k > 0 && maior_que_pai(maxheap, k); k = pai(k)) {
+    /* e sobe no heap o novo elemento */
+    for (k = maxheap->tamanho-1; k > 0 && maior_que_pai(maxheap, k); k = pai(k)) {
         troca_com_pai(maxheap, k);
     }
 
     return true;
 }
 
-bool novo_item(FilaPrio maxheap, ...) {
-    va_list argumentos;
-    va_start(argumentos, maxheap);
-    Item novo = maxheap->construtor(argumentos);
-    va_end(argumentos);
-
-    if (eh_vazio(novo)) {
-        return false;
-    }
-
-    if (! inserir_item(maxheap, novo)) {
-        maxheap->destrutor(novo);
-        return false;
-    }
-
-    return true;
-}
-
+/* remove o maior elemento */
 Item pegar_proximo(FilaPrio maxheap) {
+    Item proximo;
+    unsigned k, prox_k;
+
     if (eh_vazio(maxheap) || eh_vazio(maxheap->heap) || maxheap->tamanho == 0) {
         return NULL;
     }
 
-    Item proximo = maxheap->heap[0];
+    /* retira o maior elemento */
+    proximo = maxheap->heap[0];
+    /* coloca o último no lugar */
     maxheap->heap[0] = maxheap->heap[--maxheap->tamanho];
 
-    unsigned k;
-    for (k = maior_filho(maxheap, 0); k <= pai(maxheap->tamanho-2) && maior_que_pai(maxheap, k); k = maior_filho(maxheap, k)) {
-        troca_com_pai(maxheap, k);
+    /* se tiver um ou nenhum elemento, não precisa de ajuste */
+    if (maxheap->tamanho < 2) {
+        return proximo;
     }
-    if (k < maxheap->tamanho && maior_que_pai(maxheap, k)) {
-        troca_com_pai(maxheap, k);
+
+    /* senão, desce no heap */
+    k = 0;
+    /* desce até o último nó com dois filhos
+     * que é até onde maior_item é garantido o funcionamento
+     */
+    for (prox_k = maior_item(maxheap, 0); prox_k <= pai(maxheap->tamanho-2)
+            && k != prox_k; prox_k = maior_item(maxheap, k)) {
+        troca_com_pai(maxheap, prox_k);
+        k = prox_k;
+    }
+    /* e então desce para o último nível */
+    if (prox_k < maxheap->tamanho && k != prox_k) {
+        troca_com_pai(maxheap, prox_k);
+        k = prox_k;
+        
+        /* o filho na verdade pode ser o único elemento com apenas um filho,
+         * se esse elemento existir, e nesse caso ainda existe esse filho
+         * para ser testado
+         */
+        prox_k = filho_dir(k);
+        if (prox_k < maxheap->tamanho && compara(maxheap, prox_k, k) > 0) {
+            troca_com_pai(maxheap, prox_k);
+        }
     }
 
     return proximo;
-}
-
-bool esta_vazia(FilaPrio maxheap) {
-    return eh_vazio(maxheap) || maxheap->tamanho == 0;
 }
 
 #undef eh_vazio
