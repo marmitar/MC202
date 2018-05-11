@@ -6,23 +6,40 @@ para se construir o heap de um vetor fica:
 \begin{gather*}
     \sum_{h = 0}^{\left\lfloor\log_d n\right\rfloor} \left\lceil n\ (1 - 1/d)^{h+1}\right\rceil\ O(h) \\
     O\left( \sum_{h = 0}^{\left\lfloor\log_d n\right\rfloor} \left\lceil n\ (1 - 1/d)^{h+1}\right\rceil\ h\right) \\
+\end{gather*}
+Por causa da análise assintótica da notação $O$, podemos desconsiderar as funções $\lceil\ \rceil$ e $\lfloor\ \rfloor$
+que consideram a parte inteira da entrada, visto que elas não alteram o caráter do crescimento da função. Então:
+\begin{gather*}
     O\left(\sum_{h = 0}^{\log_d n} n\ (1 - 1/d)^{h+1} h\right) \\
     O\left(n \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^{h+1}\right) \\
-    O\left(n \frac{d-1}{d} \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \\
-    O\left(n \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \\
-    O\left(n \sum_{h = 0}^{\infty} h \left(\frac{d - 1}{d}\right)^h\right)
+    O\left(n \frac{d-1}{d} \sum_{h = 0}^{\log_d n} h \left(\frac{d - 1}{d}\right)^h\right) \addtocounter{equation}{1}\tag{\theequation} \label{eq:hseries}
 \end{gather*}
-Mas, sabemos que para $0 < x < 1$:
-$$\sum_{n = 0}^\infty x^n = \lim_{n\to\infty} S(n) =  \lim_{n\to\infty} \frac{1-x^n}{1-x} = \frac{1}{1-x}$$
+Mas, sabemos que:
+$$\sum_{k = 0}^n x^k = S(n) =\frac{1-x^{n+1}}{1-x}$$
 Derivando ambos os lados:
 \begin{align*}
-    \sum_{n = 0}^\infty n x^{n-1} &= (-1) \frac{1}{(1-x)^2} (-1) = \frac{1}{(1-x)^2} \\
-    \sum_{n = 0}^\infty n x^n &= \frac{x}{(1-x)^2}
+    \sum_{k = 0}^n k x^{k-1} &= \frac{-(n+1)x^n(1-x)-(1-x^{n+1})(-1)}{(1-x)^2} = \frac{1-x^{n+1}-x^n(n+1)(1-x)}{(1-x)^2} \\
+    \sum_{k = 0}^n k x^k &= \frac{x}{(1-x)^2} (1-x^{n+1}-x^n(n+1)(1-x))
 \end{align*}
-Aplicando esse resultado com $n = h$ e $x = \frac{d-1}{d}$ na equação incial:
+Que pode ser aplicada na eq. \eqref{eq:hseries} com $k = h$ e $x = \frac{d-1}{d}$. Assim, sendo que $d$ é constante para
+um dado problema, a complexidade fica:
 \begin{gather*}
-    O\left(n \frac{(d-1)/d}{(1 - (d-1)/d)^2}\right) \\
-    O\left(n\ d(d-1)\right) \\
-    O(n)
+    O\left(n \frac{d-1}{d} \frac{(d-1)/d}{(1-(d-1)/d)^2} \left(1-\left(\frac{d-1}{d}\right)^{1+\log_d n}-(1+\log_d n)\left(\frac{d-1}{d}\right)^{\log_d n}\left(1-\frac{d-1}{d}\right)\right)\right) \\
+    O\left(n \left(1-\frac{d-1}{d} \frac{(d^{\log_d (d-1)})^{\log_d n}}{d^{\log_d n}}-(1+\log_d n)\frac{(d^{\log_d (d-1)})^{\log_d n}}{d^{\log_d n}}\frac{1}{d}\right)\right) \\
+    O\left(n \left(1-((d-1)+(1+\log_d n))\frac{n^{\log_d (d-1)}}{n}\right)\right) \\
+    O\left(n \left(1-\frac{d+\log_d n}{n^{(1-\log_d (d-1))}}\right)\right) \\
+    O\left(n \left(1-\frac{\log_d n}{n^{(1-\log_d (d-1))}}\right)\right) \\
+    O\left(n-\frac{n \log_d n}{n^{(1-\log_d (d-1))}}\right) \\
+    O\left(n-n^{\log_d (d-1)}\log_d n\right)
 \end{gather*}
-Que mostra que o algoritmo tem complexidade linear, já que $d$ é constante para o heap escolhido.
+Porém, para um $0 < a < 1$:
+\begin{align*}
+    \lim_{n\to\infty} \frac{n}{n^a\ln n}
+    &= \lim_{n\to\infty} \frac{n^{1-a}}{\ln n} \\
+    &= \lim_{n\to\infty} \frac{(1-a)n^{-a}}{1/n} \\
+    &= (1-a) \lim_{n\to\infty} n^{1-a} = +\infty
+\end{align*}
+Já que $d \geqslant 2$, temos que $0 < \log_d (d-1) < 1$ e, portanto, como mostra o limite acima, $O(n)$ tem um
+crescimento assintoticamente maior que $O(n^{\log_d (d-1)}\log_d n)$, o que faz sentido, senão a complaxidade seria negativa.
+Assim, $O(n - n^{\log_d (d-1)}\log_d n) = O(n)$, o que mostra que o algoritmo de \textbf{\textit{HeapSort}}
+tem complexidade linear, inclusive no caso específico de $d  = 3$.

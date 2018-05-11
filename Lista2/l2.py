@@ -65,8 +65,7 @@ class Exercicio(Document):
         return self.create(Subsection(letra + ')', False))
 
     def inserir_tex(self, arq):
-        with open(arq, 'r') as ex:
-                self.apende(ex.read())
+        self.append(Command('input', arq))
 
     def ler_ex(self):
         self.inserir_tex('ex' + str(self.ex) + self.exl + '.tex')
