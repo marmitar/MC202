@@ -1,6 +1,7 @@
 Algoritmo HeapSortTernário:
 
 Entradas: Vetor D de tamanho n
+Saída: O próprio vetor D ordenado em um Heap de Máximo
 
 -- heap ternário
 d ← 3
@@ -27,6 +28,8 @@ para i de n - 1 até 0:
         -- troque com o filho
         se j > máx:
             troca(V, j, máx)
+
+        -- próximo
         j ← filho(j, máx_k)
 
     -- até não ter filhos maiores ou não ter filhos
