@@ -5,15 +5,15 @@
 
 typedef void *Item;
 
-typedef struct _arv_b Arvore;
+typedef struct _arv_b *Arvore;
 
 typedef int (*Comparador)(Item, Item);
 typedef void (*Destrutor)(Item);
 
-Arvore constroi_arvore(Comparador, Destrutor);
+Arvore constroi_arvore(Destrutor, Comparador);
 unsigned destroi_arvore(Arvore);
 
 bool inserir_item(Arvore, Item);
-Item pegar_proximo(Arvore);
+int buscar_item(Arvore, Item);
 
 #endif
