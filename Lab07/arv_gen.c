@@ -8,77 +8,84 @@
 #define qtd_folhas(h) \
     ((1 << (h)) - 1)
 
-#define folha(k, h, n) \
-    (((n-1)*k)/h - (h-1))
-
-#define formato_leitura(qtd) "%" #qtd "s"
-
-struct _arv_g {
-    Arvore arvore;
-    unsigned altura;
-    String *lista;
-};
-
 static int _stringcmp(Item a, Item b) {
     return strncmp(a, b, STR_MAX);
 }
 
-static Genealogia _gen_init(String *lista, unsigned altura) {
+Genealogia constroi_gen(char **lista, unsigned altura) {
     struct _arv_g *nova = malloc(sizeof(struct _arv_g));
-    nova->arvore = constroi_arvore(NULL, _stringcmp);
+    unsigned ancestrais = qtd_folhas(altura);
+    nova->arvore = constroi_arvore((Item *) lista, ancestrais, POSORDEM, _stringcmp);
     nova->lista = lista;
     nova->altura = altura;
     return nova;
 }
 
-Genealogia constroi_gen_de_lista(String *lista, unsigned altura) {
-    Genealogia gen = _gen_init(lista, altura);
-
-    unsigned ancestrais = qtd_folhas(altura);
-    for (unsigned h = 1; h <= altura; h++) {
-        for (unsigned k = 1; k <= h; k++) {
-            inserir_item(gen->arvore, (Item) lista[folha(k, h, ancestrais)]);
-        }
-    }
-    return gen;
-}
-
 Genealogia constroi_gen_de_arquivo(FILE *arquivo, unsigned altura) {
-    unsigned ancestrais = qtd_folhas(altura);
+    unsigned i, ancestrais;
+    char **lista;
+    
+    ancestrais = qtd_folhas(altura);
 
-    fprintf(stderr, "%u\n", ancestrais);
+    lista = malloc(ancestrais * sizeof(char *));
+    lista[0] = malloc(ancestrais * (STR_MAX+1) * sizeof(char));
 
-    String *lista = malloc(ancestrais * sizeof(String));
-
-    for (unsigned i = 0; i < ancestrais; i++) {
+    for (i = 0; i < ancestrais; i++) {
+        lista[i] = lista[0] + i * ((STR_MAX+1) * sizeof(char));
         fscanf(arquivo, "%s", lista[i]);
     }
 
-    return constroi_gen_de_lista(lista, altura);
+    return constroi_gen(lista, altura);
 }
 
 void destroi_gen(Genealogia gen) {
     destroi_arvore(gen->arvore);
+    free(gen->lista[0]);
     free(gen->lista);
-    free((void *) gen);
+    free(gen);
 }
 
-void compara_genealogias(Genealogia gen1, Genealogia gen2) {
+#define escreve_texto(texto, nome, altura) \
+    texto += sprintf(texto, "%s %u", nome, altura) * sizeof(char)
+
+#define espaco(texto) \
+    texto += sprintf(texto, " ") * sizeof(char)
+
+#define fim_de_linha(texto) \
+    texto += sprintf(texto, "\n") * sizeof(char)
+
+static char *_rec_compara_gen(char *texto, No raiz, Arvore arv) {
+    int altura;
+
+    if (raiz == NULL) {
+        return texto;
+    }
+
+    altura = buscar_item(arv, raiz->dado);
+
+    if (altura >= 0) {
+        escreve_texto(texto, (char *) raiz->dado, altura);
+        espaco(texto);
+    }
+
+    texto = _rec_compara_gen(texto, raiz->esquerda, arv);
+    texto = _rec_compara_gen(texto, raiz->direita, arv);
+
+    return texto;
+}
+
+char *compara_genealogias(Genealogia gen1, Genealogia gen2) {
     unsigned ancestrais_gen1 = qtd_folhas(gen1->altura);
-    for (unsigned i = 0; i < ancestrais_gen1; i++) {
-        if (buscar_item(gen2->arvore, (Item) gen1->lista[i]) >= 0) {
-            int altura = buscar_item(gen1->arvore, (Item) gen1->lista[i]);
-            printf("%s %d ", gen1->lista[i], altura);
-        }
-    }
-    printf("\n");
-    
     unsigned ancestrais_gen2 = qtd_folhas(gen2->altura);
-    for (unsigned i = 0; i < ancestrais_gen2; i++) {
-        if (buscar_item(gen1->arvore, (Item) gen2->lista[i]) >= 0) {
-            int altura = buscar_item(gen2->arvore, (Item) gen2->lista[i]);
-            printf("%s %d ", gen2->lista[i], altura);
-        }
-    }
-    printf("\n");
+    unsigned capacidade_texto = (ancestrais_gen1 + ancestrais_gen2) * (STR_MAX + 4);
+
+    char *resultado = calloc(capacidade_texto, sizeof(char));
+
+    char *str_ptr = _rec_compara_gen(resultado, gen2->arvore->raiz, gen1->arvore);
+    fim_de_linha(str_ptr);
+    
+    str_ptr = _rec_compara_gen(str_ptr, gen1->arvore->raiz, gen2->arvore);
+    fim_de_linha(str_ptr);
+
+    return resultado;
 }
