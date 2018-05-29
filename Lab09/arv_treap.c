@@ -1,18 +1,24 @@
 #include "arv_treap.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <limits.h>
 
+/*  bibliotecas em UNIX para usar ruído ambiental
+   como gerador de números aleatórios */
 #ifdef __unix__
+#include <sys/syscall.h>
+#ifdef SYS_getrandom
 #include <sys/random.h>
 #endif
+#endif
 
-typedef long long unsigned Prio;
+typedef long unsigned Prio;
 
 typedef struct _no {
     Dado dado;
-    Prio pri;
+    Prio pri; /* prioridade */
     struct _no *esq, *dir;
 } *No;
 #define NO_VAZIO ((No) NULL)
@@ -23,6 +29,10 @@ struct _treap {
     Destrutor destr;
 };
 
+/* * * * * * *
+ * Construtor *
+  * * * * * * */
+
 Treap constroi_treap(Comparador comparador, Destrutor destrutor) {
     Treap novo = malloc(sizeof(struct _treap));
     novo->raiz = NO_VAZIO;
@@ -31,7 +41,12 @@ Treap constroi_treap(Comparador comparador, Destrutor destrutor) {
     return novo;
 }
 
-void _destroi_no_rec(Destrutor destroi, No raiz) {
+
+/* * * * * * *
+ * Destrutor *
+ * * * * * * */
+
+static void _destroi_no_rec(Destrutor destroi, No raiz) {
     if (raiz == NO_VAZIO) {
         return;
     }
@@ -48,8 +63,18 @@ void destroi_treap(Treap treap) {
     free(treap);
 }
 
+
+/* * * * * *
+ * Inserção *
+  * * * * * */
+
+/* gerador de prioridade aletória */
+/* quão mais aleatório for, normalmente mais otimizada a estrutura */
 static Prio _gerar_prio(void) {
-#ifdef __unix__
+    static bool semeado = false;
+
+#ifdef SYS_getrandom
+    /* se possível, usa ruídos ambientais, que é a opção mais aleatória */
     Prio nova;
     if (getrandom(&nova, sizeof(Prio), GRND_RANDOM | GRND_NONBLOCK) == sizeof(Prio)) {
         return nova;
@@ -58,19 +83,17 @@ static Prio _gerar_prio(void) {
     }
 #endif
 
-    srand(time(NULL));
+    /* semea apenas uma vez, usando varíavel estática para marcar */
+    /* semear toda vez faz a treap rodar perceptivelmente mais lenta */
+    if (! semeado) {
+        srand(time(NULL));
+        semeado = true;
+    }
+
     return rand();
 }
 
-static No _rotaciona_p_dir(No x) {
-    No y = x->esq;
-
-    x->esq = y->dir;
-    y->dir = x;
-
-    return y;
-}
-
+/* rotações */
 static No _rotaciona_p_esq(No x) {
     No y = x->dir;
 
@@ -79,21 +102,35 @@ static No _rotaciona_p_esq(No x) {
 
     return y;
 }
+static No _rotaciona_p_dir(No y) {
+    No x = y->esq;
+
+    y->esq = x->dir;
+    x->dir = y;
+
+    return x;
+}
 
 static No _insere_no_rec(Comparador cmp, No raiz, No novo) {
-    if (raiz == NULL) {
+    if (raiz == NO_VAZIO) {
+        /* insere na folha */
         return novo;
     }
-
-    if (cmp(raiz->dado, novo->dado) > 0) {
+    
+    /* se o novo dado é maior que a raiz */
+    if (cmp(novo->dado, raiz->dado) > 0) {
+        /* insere na árvore */
         raiz->dir = _insere_no_rec(cmp, raiz->dir, novo);
+        /* e corrige a heap */
         if (raiz->dir->pri > raiz->pri) {
-            _rotaciona_p_esq(raiz);
+            raiz = _rotaciona_p_esq(raiz);
         }
+
+    /* do mesmo modo, se for menor */
     } else {
         raiz->esq = _insere_no_rec(cmp, raiz->esq, novo);
         if (raiz->esq->pri > raiz->pri) {
-            _rotaciona_p_dir(raiz);
+            raiz = _rotaciona_p_dir(raiz);
         }
     }
 
@@ -104,32 +141,47 @@ void insere_dado(Treap treap, Dado dado) {
     No novo = malloc(sizeof(struct _no));
     novo->dado = dado;
     novo->pri = _gerar_prio();
+    novo->esq = novo->dir = NO_VAZIO;
 
     treap->raiz =_insere_no_rec(treap->cmp, treap->raiz, novo);
 }
 
-No _pega_min_rec(No raiz, Dado *resultado) {
+
+/* static No _remove_dado_rec(Comparador cmp, No raiz, Dado dado) {
+
+}
+
+void remove_dado(Treap treap, Dado dado) {
+} */
+
+/* * * * *
+ * Mínimo *
+  * * * * */
+
+static No _pega_min_rec(No raiz, Dado *resultado) {
+    No prox;
+
+    /* o mínimo é apenas o nó mais a esquerda possível */
     if (raiz->esq != NO_VAZIO) {
         raiz->esq = _pega_min_rec(raiz->esq, resultado);
-        return raiz->esq;
+        return raiz;
     }
-
-    No prox = raiz->dir;
 
     *resultado = raiz->dado;
 
+    prox = raiz->dir;
     free(raiz);
 
     return prox;
 }
 
 Dado pega_minimo(Treap treap) {
+    Dado minimo;
     if (treap->raiz == NO_VAZIO) {
         return NULL;
     }
 
-    Dado resultado;
-    treap->raiz = _pega_min_rec(treap->raiz, &resultado);
+    treap->raiz = _pega_min_rec(treap->raiz, &minimo);
 
-    return resultado;
+    return minimo;
 }
