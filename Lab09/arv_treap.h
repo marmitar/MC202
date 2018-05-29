@@ -11,8 +11,7 @@ Treap constroi_treap(Comparador, Destrutor);
 void destroi_treap(Treap);
 
 void insere_dado(Treap, Dado);
-/* Dado remove_dado(Treap, Dado); */
 
-Dado pega_minimo(Treap);
+Dado tira_minimo(Treap);
 
 #endif /* _ARV_TREAP_H */

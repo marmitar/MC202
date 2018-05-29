@@ -15,6 +15,7 @@
 #endif
 
 typedef long unsigned Prio;
+#define PRI_FOLHA ((Prio) ULONG_MAX)
 
 typedef struct _no {
     Dado dado;
@@ -65,35 +66,9 @@ void destroi_treap(Treap treap) {
 
 
 /* * * * * *
- * Inserção *
-  * * * * * */
+ * Rotação *
+ * * * * * */
 
-/* gerador de prioridade aletória */
-/* quão mais aleatório for, normalmente mais otimizada a estrutura */
-static Prio _gerar_prio(void) {
-    static bool semeado = false;
-
-#ifdef SYS_getrandom
-    /* se possível, usa ruídos ambientais, que é a opção mais aleatória */
-    Prio nova;
-    if (getrandom(&nova, sizeof(Prio), GRND_RANDOM | GRND_NONBLOCK) == sizeof(Prio)) {
-        return nova;
-    } else if (getrandom(&nova, sizeof(Prio), GRND_NONBLOCK) == sizeof(Prio)) {
-        return nova;
-    }
-#endif
-
-    /* semea apenas uma vez, usando varíavel estática para marcar */
-    /* semear toda vez faz a treap rodar perceptivelmente mais lenta */
-    if (! semeado) {
-        srand(time(NULL));
-        semeado = true;
-    }
-
-    return rand();
-}
-
-/* rotações */
 static No _rotaciona_p_esq(No x) {
     No y = x->dir;
 
@@ -109,6 +84,36 @@ static No _rotaciona_p_dir(No y) {
     x->dir = y;
 
     return x;
+}
+
+
+/* * * * * *
+ * Inserção *
+  * * * * * */
+
+/* gerador de prioridade aletória */
+/* quão mais aleatório for, normalmente mais otimizada a estrutura */
+static Prio _gerar_prio(void) {
+    static bool semeado = false;
+
+#ifdef SYS_getrandom
+    Prio nova;
+    /* se possível, usa ruídos ambientais, que é uma opção mais aleatória */
+    if (getrandom(&nova, sizeof(Prio), GRND_RANDOM | GRND_NONBLOCK) == sizeof(Prio) && nova != PRI_FOLHA) {
+        return nova;
+    } else if (getrandom(&nova, sizeof(Prio), GRND_NONBLOCK) == sizeof(Prio) && nova != PRI_FOLHA) {
+        return nova;
+    }
+#endif
+
+    /* semea apenas uma vez, usando varíavel estática para marcar */
+    /* semear toda vez faz a treap rodar perceptivelmente mais lenta */
+    if (! semeado) {
+        srand(time(NULL));
+        semeado = true;
+    }
+
+    return rand();
 }
 
 static No _insere_no_rec(Comparador cmp, No raiz, No novo) {
@@ -147,23 +152,16 @@ void insere_dado(Treap treap, Dado dado) {
 }
 
 
-/* static No _remove_dado_rec(Comparador cmp, No raiz, Dado dado) {
-
-}
-
-void remove_dado(Treap treap, Dado dado) {
-} */
-
 /* * * * *
  * Mínimo *
   * * * * */
 
-static No _pega_min_rec(No raiz, Dado *resultado) {
+static No _tira_min_rec(No raiz, Dado *resultado) {
     No prox;
 
     /* o mínimo é apenas o nó mais a esquerda possível */
     if (raiz->esq != NO_VAZIO) {
-        raiz->esq = _pega_min_rec(raiz->esq, resultado);
+        raiz->esq = _tira_min_rec(raiz->esq, resultado);
         return raiz;
     }
 
@@ -175,13 +173,13 @@ static No _pega_min_rec(No raiz, Dado *resultado) {
     return prox;
 }
 
-Dado pega_minimo(Treap treap) {
+Dado tira_minimo(Treap treap) {
     Dado minimo;
     if (treap->raiz == NO_VAZIO) {
         return NULL;
     }
 
-    treap->raiz = _pega_min_rec(treap->raiz, &minimo);
+    treap->raiz = _tira_min_rec(treap->raiz, &minimo);
 
     return minimo;
 }
