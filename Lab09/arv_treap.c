@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
-#include <limits.h>
 
 /*  bibliotecas em UNIX para usar ruído ambiental
    como gerador de números aleatórios */
@@ -15,7 +14,6 @@
 #endif
 
 typedef long unsigned Prio;
-#define PRI_FOLHA ((Prio) ULONG_MAX)
 
 typedef struct _no {
     Dado dado;
@@ -99,9 +97,9 @@ static Prio _gerar_prio(void) {
 #ifdef SYS_getrandom
     Prio nova;
     /* se possível, usa ruídos ambientais, que é uma opção mais aleatória */
-    if (getrandom(&nova, sizeof(Prio), GRND_RANDOM | GRND_NONBLOCK) == sizeof(Prio) && nova != PRI_FOLHA) {
+    if (getrandom(&nova, sizeof(Prio), GRND_RANDOM | GRND_NONBLOCK) == sizeof(Prio)) {
         return nova;
-    } else if (getrandom(&nova, sizeof(Prio), GRND_NONBLOCK) == sizeof(Prio) && nova != PRI_FOLHA) {
+    } else if (getrandom(&nova, sizeof(Prio), GRND_NONBLOCK) == sizeof(Prio)) {
         return nova;
     }
 #endif
