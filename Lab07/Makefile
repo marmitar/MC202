@@ -1,7 +1,7 @@
 SRC = $(wildcard *.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 CC=gcc
-GFLAGS=-ansi -Wall -pedantic-errors -Werror -g -lm
+GFLAGS=-ansi -Wall -pedantic-errors -Werror -g3 -lm
 # GFLAGS=-ggdb3 -Wall -Werror -pedantic-errors -lm -std=gnu11
 
 lab07: $(OBJ)
