@@ -1,7 +1,7 @@
 TARGET = main
 CC = gcc
-# CFLAGS = -ansi -Wall -pedantic-errors -Werror -g
-GFLAGS = -ggdb3 -Wall -Werror -pedantic-errors -g -std=gnu11
+CFLAGS = -ansi -Wall -pedantic-errors -Werror -g3
+# CFLAGS = -std=gnu11 -Wall -Werror -pedantic-errors -g3
 LIBS = -lm
 
 SRC = $(wildcard *.c)
@@ -17,4 +17,3 @@ $(TARGET): $(OBJ)
 
 clean:
 	rm -f $(TARGET) *.o
-
