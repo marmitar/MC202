@@ -7,7 +7,7 @@
 /* Implementação do xxHash (https://github.com/Cyan4973/xxHash), mas
  * baseado em uma versão simplificada (http://create.stephan-brumme.com/xxhash/),
  * só que usando 16 bits. O algoritmo implementa um método multiplicativo com
- * várias operação binárias por cima.
+ * várias operações binárias por cima.
  */
 
 #include <stdint.h>

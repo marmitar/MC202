@@ -13,15 +13,15 @@ def calc(listas, labs, pesos):
     print("Final:", media)
 
 
-labs = [10, 10, 10, 10, 10, 10, 2]
-pesos = [1,  1,  2,  2,  2,  2, 3]
+labs = [10, 10, 10, 10, 10, 10, 2, 10, 10, 10]
+pesos = [1,  1,  2,  2,  2,  2, 3,  3,  3,  4]
 
-labs_faltantes = [10, 10, 10, 10, 10, 10, 7.5, 10, 10, 0, 0, 0, 0]
+labs_faltantes = [10, 10, 10, 10, 10, 10, 7.5, 10, 10, 10, 10, 0, 0]
 labs_esperado = [10, 10, 10, 10, 10, 10, 7.5, 10, 10, 10, 10, 10, 10]
 pesos_final = [1,  1,  2,  2,  2,  2,  3,  3,  3, 3, 4, 4, 4]
 
-listas = [8.94, 10]
-listas_faltante = [8.94, 10, 10,  0,  0]
+listas = [8.94, 10, 10]
+listas_faltante = [8.94, 10, 10, 10,  0]
 listas_esperado = [8.94, 10, 10, 10, 10]
 
 print("PARCIAL")
