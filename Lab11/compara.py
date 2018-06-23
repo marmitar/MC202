@@ -10,7 +10,7 @@ arq_name2 = str( sys.argv[ 1 ] )
 
 arq1 = open(arq_name1, 'r')
 
-lines = arq1.readlines();
+lines = arq1.readlines()
 
 h = int( lines[0].split(' ')[0] )
 dx = int( lines[0].split(' ')[1] )

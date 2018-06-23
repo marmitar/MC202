@@ -80,20 +80,20 @@ void reconhece_mapa(Drone drone, Mapa mapa) {
     imprime_mapa(mapa);
 #endif
 
-    for (size_t i = 0; i < mapa->lin; i++) {
-        for (size_t j = 0; j < mapa->col; j++) {
+    for (long i = mapa->lin-1; i >= 0; i--) {
+        for (long j = mapa->col-1; j >= 0; j--) {
             if (mapa->matriz[i][j] <= drone->altura_max) {
-                if (i+1 < mapa->lin && mapa->matriz[i+1][j] <= drone->altura_max) {
+                if (i-1 >= 0 && mapa->matriz[i-1][j] <= drone->altura_max) {
 #ifdef DEBUG
                     printf("%lu %lu (%lu), %lu %lu (%lu) -> ", i, j, aresta(drone, i, j), i+1, j, 3 * j + (i+1));
 #endif
-                    insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i + 1, j));
+                    insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i - 1, j));
                 }
-                if (j+1 < mapa->col && mapa->matriz[i][j+1] <= drone->altura_max) {
+                if (j-1 >= 0 && mapa->matriz[i][j-1] <= drone->altura_max) {
 #ifdef DEBUG
                     printf("%lu %lu (%lu), %lu %lu (%lu) -> ", i, j, aresta(drone, i, j), i, j+1, 3 * (j+1) + i);
 #endif
-                    insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i, j + 1));
+                    insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i, j - 1));
                 }
 #ifdef DEBUG
                     printf("\n");
