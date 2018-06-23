@@ -32,7 +32,7 @@ int main(void) {
     int A, B, M, N;
 
     scanf("%d %d %d", &H, &X, &Y);
-    scanf("%d %d %d %d", &A, &B, &M, &N);
+    scanf("%d %d %d %d", &B, &A, &M, &N);
 
     Drone drone = novo_drone(H, X, Y);
 

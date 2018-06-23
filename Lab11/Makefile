@@ -1,7 +1,7 @@
 TARGET = main
 CC = gcc
 # CFLAGS = -ansi -Wall -pedantic-errors -Werror -g
-CFLAGS = -std=gnu11 -Wall -pedantic-errors -Werror -g
+CFLAGS = -std=gnu11 -Wall -pedantic-errors -Werror -g #-DDEBUG
 LIBS = -lm
 
 SRC = $(wildcard *.c)
