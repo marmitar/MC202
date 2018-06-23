@@ -1,3 +1,4 @@
+#%%
 from numpy import average
 
 def calc(listas, labs, pesos):
@@ -12,7 +13,7 @@ def calc(listas, labs, pesos):
     print("Labs:", list(zip(labs, pesos)), " =>", media_l)
     print("Final:", media)
 
-
+#%%
 labs = [10, 10, 10, 10, 10, 10, 2, 10, 10, 10]
 pesos = [1,  1,  2,  2,  2,  2, 3,  3,  3,  4]
 
@@ -24,6 +25,7 @@ listas = [8.94, 10, 10]
 listas_faltante = [8.94, 10, 10,  0]
 listas_esperado = [8.94, 10, 10, 10]
 
+#%%
 print("PARCIAL")
 calc(listas, labs, pesos)
 print()

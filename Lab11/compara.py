@@ -10,7 +10,7 @@ arq_name2 = str( sys.argv[ 1 ] )
 
 arq1 = open(arq_name1, 'r')
 
-lines = arq1.readlines()
+lines = arq1.readlines();
 
 h = int( lines[0].split(' ')[0] )
 dx = int( lines[0].split(' ')[1] )
@@ -31,9 +31,10 @@ lines = arq2.readlines()
 for l in lines:
 	c = 0
 	for i in l.split(' '):
-		c += 1
+		if( len(i.strip()) > 0 ):
+			c += 1
 	if( c != ncol ):
-		print('intância invalida!')
+		print('intância invalida!' + str(c) + " " + str(ncol))
 
 res = [ [ lines[i].split(' ')[x].strip() for x in range(0, ncol) ] for i in range(0, nrow) ]
 
