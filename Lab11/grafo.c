@@ -2,10 +2,6 @@
 
 #include <stdlib.h>
 
-#ifdef DEBUG
-#include <stdio.h>
-#endif
-
 struct _grafo_ {
     chave_t *adj_lst;
     size_t *adjacentes;
@@ -40,10 +36,6 @@ void insere_aresta(Grafo grafo, chave_t vert1, chave_t vert2) {
 
     pos_ar = grafo->adjacentes[vert2]++;
     adjlista(grafo, vert2, pos_ar) = vert1;
-
-#ifdef DEBUG
-    printf("%lu %lu\n", vert1, vert2);
-#endif
 }
 
 bool eh_adjacente(Grafo grafo, chave_t vert1, chave_t vert2) {
@@ -68,9 +60,6 @@ static chave_t *dfs_rec(Grafo grafo, bool *visitado, chave_t fim, chave_t pos, u
         return NULL;
     } else {
         visitado[pos] = true;
-#ifdef DEBUG
-        printf("%lu\n", pos);
-#endif
     }
 
     for (size_t i = 0; i < grafo->adjacentes[pos]; i++) {
@@ -89,17 +78,3 @@ chave_t *percorre_em_profundidade(Grafo grafo, chave_t inicio, chave_t fim) {
     free(visitados);
     return caminho;
 }
-
-#ifdef DEBUG
-void imprime_grafo(Grafo g) {
-    for (size_t i = 0; i < g->vertices; i++) {
-        printf("%lu: ", i);
-
-        for (size_t j = 0; j < g->adjacentes[i]; j++) {
-            printf("%lu ", adjlista(g, i, j));
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-#endif

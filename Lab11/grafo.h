@@ -19,8 +19,4 @@ bool eh_adjacente(Grafo, chave_t, chave_t);
 
 chave_t *percorre_em_profundidade(Grafo, chave_t inicio, chave_t fim);
 
-#ifdef DEBUG
-void imprime_grafo(Grafo g);
-#endif
-
 #endif/*__GRAFO_H__*/

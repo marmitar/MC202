@@ -51,60 +51,28 @@ void desaloca_mapa(Mapa mapa) {
     (((linha) * ((drone)->col)) + (coluna))
 
 #define linha(drone, chave) \
-    ((chave) / ((drone)->lin))
+    ((chave) / ((drone)->col))
 
 #define coluna(drone, chave) \
-    ((chave) % ((drone)->lin))
-
-#ifdef DEBUG
-#include <stdio.h>
-
-void imprime_mapa(Mapa m) {
-    for (size_t i = 0; i < m->lin; i++) {
-        for (size_t j = 0; j < m->col; j++) {
-            printf("%d ", m->matriz[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-#endif
+    ((chave) % ((drone)->col))
 
 void reconhece_mapa(Drone drone, Mapa mapa) {
     drone->mapa = novo_grafo(mapa->lin * mapa->col, 4);
     drone->lin = mapa->lin;
     drone->col = mapa->col;
 
-#ifdef DEBUG
-    printf("%lu %lu\n", drone->lin, drone->col);
-    imprime_mapa(mapa);
-#endif
-
     for (long i = mapa->lin-1; i >= 0; i--) {
         for (long j = mapa->col-1; j >= 0; j--) {
             if (mapa->matriz[i][j] <= drone->altura_max) {
                 if (i-1 >= 0 && mapa->matriz[i-1][j] <= drone->altura_max) {
-#ifdef DEBUG
-                    printf("%lu %lu (%lu), %lu %lu (%lu) -> ", i, j, aresta(drone, i, j), i+1, j, 3 * j + (i+1));
-#endif
                     insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i - 1, j));
                 }
                 if (j-1 >= 0 && mapa->matriz[i][j-1] <= drone->altura_max) {
-#ifdef DEBUG
-                    printf("%lu %lu (%lu), %lu %lu (%lu) -> ", i, j, aresta(drone, i, j), i, j+1, 3 * (j+1) + i);
-#endif
                     insere_aresta(drone->mapa, aresta(drone, i, j), aresta(drone, i, j - 1));
                 }
-#ifdef DEBUG
-                    printf("\n");
-#endif
             }
         }
     }
-
-#ifdef DEBUG
-    imprime_grafo(drone->mapa);
-#endif
 }
 
 Mapa analisa_caminho(Drone drone, size_t xf, size_t yf) {
@@ -121,7 +89,7 @@ Mapa analisa_caminho(Drone drone, size_t xf, size_t yf) {
         }
     }
 
-    chave_t *caminho = percorre_em_profundidade(drone->mapa, aresta(drone, drone->x, drone->y), aresta(drone, xf, yf));
+    chave_t *caminho = percorre_em_profundidade(drone->mapa, aresta(drone, drone->y, drone->x), aresta(drone, yf, xf));
 
     for (size_t i = 0; caminho[i] != CHAVE_FINAL; i++) {
         mapa->matriz[linha(drone, caminho[i])][coluna(drone, caminho[i])] = i;
