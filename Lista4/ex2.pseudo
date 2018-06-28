@@ -1,0 +1,36 @@
+Algoritmo HeapSortTernário:
+
+Entradas: Vetor D de tamanho n
+Saída: O próprio vetor D ordenado em um Heap de Máximo
+
+-- heap ternário
+d ← 3
+
+-- cada elemento desde o final
+-- note que aqui os primeiros elementos, de n-1 a pai(n-1),
+-- não terão filhos e poderiam ser removidos do laço
+para i de n - 1 até 0:
+
+    -- desce o elemento no heap
+    j ← i
+    faça:
+
+        -- a partir do elemento
+        máx ← j
+        máx_k ← 0
+
+        -- encontre o maior filho, caso exista
+        para k de 1 até d:
+            se filho(j, k) < n e V[filho(j, k)] > V[máx]:
+                máx ← filho(j,  k)
+                máx_k ← k
+
+        -- troque com o filho
+        se j > máx:
+            troca(V, j, máx)
+
+        -- próximo
+        j ← filho(j, máx_k)
+
+    -- até não ter filhos maiores ou não ter filhos
+    enquanto máx_k > 0 e j < n;
