@@ -1,1 +1,23 @@
-Grafite
+\par Além do que foi dado no enunciado, um dado grafo $C_{2n} = (V, E)$ só é um
+circuito $2n$ se existem apenas $2$ caminhos de um vértice inicial $v$ para um
+oposto $u$ e ambos os caminhos têm distância $dist(v, u) = n$. Então, no caso para
+um subgrafo $C_4$, podemos testar todos os caminhos de distância $2$, marcando cada
+um que for percorrido. Se for o segundo caminho achado, então existe um subgrafo $C_4$.
+
+\par Nesse caso, a complexidade para decidir se, de um dado vértice $v$,
+encontramos um $C_4$, sendo $d(v)$ o número de arestas de um vértice, é:
+\begin{equation*}
+    O\left(\sum_W d(w)\right)\text{; com}\ W = \{w:\ \forall w \in V \mid w\
+    \text{é adjacente a}\ v\}
+\end{equation*}
+\par Que no pior caso é:
+\begin{align*}
+    O\left(\sum_W d(w)\right)
+    &= O\left(\sum_V |V|\right) \\
+    &= O\left(|V| \times |V|\right) \\
+    &= O\left(|V|^2\right)
+\end{align*}
+
+\par Testando isso para todos os vértices fica, então, $|V| \times O\left(|V|^2
+\right) = O\left(|V|^3\right)$. Além disso, o algoritmo abaixo poderia ser melhorado
+evitando as arestas já testadas, porém a complexidade continuaria a mesma.

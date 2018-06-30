@@ -1,5 +1,6 @@
 from pylatex import Document, Section, Subsection, Command, Package, MiniPage, Center
 from pylatex.utils import NoEscape, bold
+from pylatex.math import Math
 
 def gera_titulo(titulo, subtitulo = None):
     return NoEscape(r'\textbf{'+titulo+r'}' + ((r'\\\Large '+subtitulo) if subtitulo else r''))
@@ -17,7 +18,7 @@ class Exercicio(Document):
         "encoding=utf8",
         "frame=lines",
         "numbersep=2pt",
-        # "linenos"
+        NoEscape(r"fontsize=\large")
     ]
 
     def __init__(self, lista, exercicio):
@@ -34,7 +35,8 @@ class Exercicio(Document):
         self.packages.append(Package('inputenc', 'utf8'))
         self.packages.append(Package('textgreek'))
         self.preamble.append(Command('DeclareUnicodeCharacter', ['3BB', Command('textlambda')]))
-        self.preamble.append(Command('DeclareUnicodeCharacter', ['2260', Command('neq')]))
+        self.preamble.append(Command('DeclareUnicodeCharacter', ['2260', Math(inline=True, data=[Command('neq')])]))
+        self.preamble.append(Command('DeclareUnicodeCharacter', ['221E', Math(inline=True, data=[Command('infty')])]))
 
         self.packages.append(Package('titlesec'))
         self.preamble.append(Command('titleformat', [Command('section'), NoEscape(r'\filcenter\Large'), '', '1em', '']))
@@ -64,17 +66,18 @@ class Exercicio(Document):
         self.append(Command('input', arq))
 
     def ler_ex(self):
+        self.apende(r'\large')
         self.inserir_tex('ex' + str(self.ex) + '.tex')
 
 if __name__ == '__main__':
     doc = Exercicio(4, 2)
     with doc.comeca():
         doc.ler_ex()
-        doc.adiciona_codigo('ex2.pseudo')
+        doc.adiciona_codigo('ex2.pseudo', width=.7)
     doc.generate_pdf('l4ex2', compiler_args=['-shell-escape'])
 
     doc = Exercicio(4, 3)
     with doc.comeca():
         doc.ler_ex()
-        doc.adiciona_codigo('ex3.pseudo')
+        doc.adiciona_codigo('ex3.pseudo', width=.7)
     doc.generate_pdf('l4ex3', compiler_args=['-shell-escape'])

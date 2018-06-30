@@ -1,39 +1,27 @@
-Algoritmo BuscaTernária:
+Algoritmo CalcularDistâncias:
 
-Entradas: Vetor ordenado V de tamanho n;
-          elemento E buscado
+Entradas: Grafo G(vértices V, arestas E);
+          Vértice S em V
 
-Saída: Posição P de E
+Saída: Distâncias dist(S, v) com v em V
 
--- busca ternária
-d ← 3
 
--- limites inferior e superior da busca
-l ← 0
-r ← n - 1
-enquanto l <= r:
+-- fila com cada vértice e sua respectiva distância
+percurso ← Fila()
 
-    -- em cada partição do vetor
-    para k de 1 até d:
+para cada v em V:
+    dist(S, v) ← ∞
 
-        -- como o início da partição já foi
-        -- testado na iteração anterior, o
-        -- elemento deve estar na partição se
-        -- for menor que o final da partição
-        se V[l + k * (r - l)/d] < E:
-            -- atualiza os limites
-            novo_l ← (k - 1)(r - l)/d
-            r ← k * (r - l)/d
-            l ← novo_l
-            encerra laço
+visitado[V] ← [falso ... falso]
 
-        -- encontrou
-        se V[l + k * (r - l)/d] = E:
-            P ← V[l + k * (r - l)/d]
-            encerra função
+percurso::enfileira(S, 0)
+enquanto percurso::vazio() é falso:
 
-    se laço não foi encerrado:
-        lança erro
+    v, d ← percurso::desenfileira()
 
--- não achou
-lança erro
+    dist(S, v) ← d
+    visitado[v] ← verdadeiro
+
+    para cada w adjacente a v:
+        se não visitado[w]:
+            percurso::enfileira(w, d + 1)

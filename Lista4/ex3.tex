@@ -1,1 +1,4 @@
-Grafo
+\par Para calcular a distâncias partindo de um vértice $v$, precisamos apenas percorrer todo o grafo, mantendo informações sobre a distância percorrida
+até então. Para percorrer o grafo, temos duas opções principais, percurso em profundidade e em largura, ambos com complexidade
+$O\left(|V| + |E|\right)$, porém o percurso em largura mantém também a propriedade de que o primeiro caminho encontrado já tem
+a menor distância até aquele ponto. Por isso, o algoritmo abaixo acabou sendo a transversal em largura, apesar de levemente modificada.

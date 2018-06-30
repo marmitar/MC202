@@ -1,36 +1,17 @@
-Algoritmo HeapSortTernário:
+Algoritmo ContémC4:
 
-Entradas: Vetor D de tamanho n
-Saída: O próprio vetor D ordenado em um Heap de Máximo
+Entrada: Grafo G(vértices V, arestas E)
 
--- heap ternário
-d ← 3
 
--- cada elemento desde o final
--- note que aqui os primeiros elementos, de n-1 a pai(n-1),
--- não terão filhos e poderiam ser removidos do laço
-para i de n - 1 até 0:
+para cada v em V:
+    tem_caminho[V] ← [falso ... falso]
 
-    -- desce o elemento no heap
-    j ← i
-    faça:
+    para cada w adjacente a v:
+        para cada u adjacente a w tal que u ≠ v:
 
-        -- a partir do elemento
-        máx ← j
-        máx_k ← 0
+            se tem_caminho[u]:
+                contém C4
+            senão:
+                tem_caminho[u] ← verdadeiro
 
-        -- encontre o maior filho, caso exista
-        para k de 1 até d:
-            se filho(j, k) < n e V[filho(j, k)] > V[máx]:
-                máx ← filho(j,  k)
-                máx_k ← k
-
-        -- troque com o filho
-        se j > máx:
-            troca(V, j, máx)
-
-        -- próximo
-        j ← filho(j, máx_k)
-
-    -- até não ter filhos maiores ou não ter filhos
-    enquanto máx_k > 0 e j < n;
+não contém C4
