@@ -1,3 +1,4 @@
+/* mesmo arquivo que o auxiliar */
 #ifndef FILA_PRIO_H
 #define FILA_PRIO_H
 

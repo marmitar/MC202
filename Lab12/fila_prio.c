@@ -1,3 +1,4 @@
+/* mesmo arquivo que o auxiliar */
 #include <stdlib.h>
 #include <stdio.h>
 #include "fila_prio.h"
