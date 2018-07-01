@@ -5,7 +5,7 @@ CC=gcc
 GFLAGS= -std=gnu11 -Wall -pedantic-errors -Werror -g -lm
 
 lab12: $(OBJ)
-	$(CC) $(GFLAGS) *.o -o lab12
+	$(CC) $(GFLAGS) *.o -o main
 
 %.o: %.c
 	$(CC) $(GFLAGS) -c $< -o $@
