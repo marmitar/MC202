@@ -12,3 +12,5 @@ tmp
 */__pycache__/*
 */*.egg-info/*
 gmon.out
+dsrs/target
+dsrs/Cargo.lock
