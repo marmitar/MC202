@@ -63,3 +63,32 @@ impl<T: ?Sized> NonNull<T> {
         NonNull(self.0.cast())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Garantee that `*mut T`, `NonNull<T>` and `Option<NonNull<T>>`
+    /// all have the same size, independently if `T` is an
+    /// [Exotically Sized Type](https://doc.rust-lang.org/nomicon/exotic-sizes.html)
+    #[test]
+    fn packed_option() {
+        use std::fmt::Debug;
+        use std::mem::size_of;
+
+        enum Void {}
+
+        fn assert_size<T: ?Sized>(spec: &str) {
+            eprintln!("Packed option: {}", spec);
+
+            assert_eq!(size_of::<*mut T>(), size_of::<Option<NonNull<T>>>());
+            assert_eq!(size_of::<NonNull<T>>(), size_of::<Option<NonNull<T>>>())
+        }
+
+        assert_size::<u32>("normal type");
+        assert_size::<()>("zero sized type");
+        assert_size::<dyn Debug>("trait object");
+        assert_size::<str>("slice type");
+        assert_size::<Void>("empty type")
+    }
+}
