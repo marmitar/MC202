@@ -14,11 +14,11 @@ impl<T: ?Sized> NonNull<T> {
     /// Creates a new `NonNull` from a reference
     ///
     /// Since a valid reference is never null, this is always safe.
-    /// This is also conceptually equivalent to `value as *mut T`,
-    /// which is safe and garanteed to be non null.
+    /// This is also conceptually equivalent to `value as
+    /// *const T *mut T`, which is safe and garanteed to be non null.
     #[inline(always)]
-    pub const fn from(value: &mut T) -> Self {
-        let ptr = value as *mut T;
+    pub const fn from(value: &T) -> Self {
+        let ptr = value as *const T as *mut T;
         // SAFETY: a reference is never null
         unsafe { Self::new_unchecked(ptr) }
     }
