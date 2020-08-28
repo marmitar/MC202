@@ -16,21 +16,6 @@ impl<T: ?Sized> NonNull<T> {
         Self(std::ptr::NonNull::new_unchecked(ptr))
     }
 
-    /// Creates a new `NonNull` from a reference.
-    ///
-    /// Since a valid reference is never null, this is always safe.
-    /// This is also conceptually equivalent to `value as
-    /// *const T *mut T`, which is safe and guaranteed to be non null.
-    ///
-    /// Note: implemented as a `const` method intead of implementing
-    /// the trait [`From`].
-    #[inline]
-    pub const fn from(value: &T) -> Self {
-        let ptr = value as *const T as *mut T;
-        // SAFETY: a reference is never null
-        unsafe { Self::new_unchecked(ptr) }
-    }
-
     /// Read [`std::ptr::NonNull::new`]
     #[inline]
     pub const fn new(ptr: *mut T) -> Option<Self> {
@@ -60,16 +45,120 @@ impl<T: ?Sized> NonNull<T> {
         &mut *self.0.as_ptr()
     }
 
+    /// Read [`std::ptr::NonNull::cast`]
+    #[inline]
+    pub const fn cast<U>(self) -> NonNull<U> {
+        NonNull(self.0.cast())
+    }
+
+    /// Creates a new `NonNull` from a reference.
+    ///
+    /// Since a valid reference is never null, this is always safe.
+    /// This is also conceptually equivalent to `value as
+    /// *const T *mut T`, which is safe and guaranteed to be non null.
+    ///
+    /// Note: implemented as a `const` method intead of implementing
+    /// the trait [`From`].
+    #[inline]
+    pub const fn from(value: &T) -> Self {
+        let ptr = value as *const T as *mut T;
+        // SAFETY: a reference is never null
+        unsafe { Self::new_unchecked(ptr) }
+    }
+
     /// Recover inner [`std::ptr::NonNull`] from `NonNull`.
     #[inline]
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0
     }
 
-    /// Read [`std::ptr::NonNull::cast`]
+    /// This is true when `NonNull<T>` is a fat pointer.
     #[inline]
-    pub const fn cast<U>(self) -> NonNull<U> {
-        NonNull(self.0.cast())
+    pub const fn is_fat_pointer() -> bool {
+        use std::mem::size_of;
+
+        /// Size of a fat pointer.
+        const FAT_POINTER_SIZE: usize = size_of::<*mut [u8]>();
+        debug_assert!(FAT_POINTER_SIZE != size_of::<*mut u8>());
+
+        size_of::<Self>() == FAT_POINTER_SIZE
+    }
+
+    /// Split fat pointer into actual pointer and metadata.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use dsrs::mem::NonNull;
+    /// #
+    /// let data = [1, 2, 3, 4];
+    /// let ptr = NonNull::<[u32]>::from(&data);
+    ///
+    /// let (data_ptr, metadata) = ptr.split().unwrap();
+    ///
+    /// // metada for a slice is the length
+    /// assert_eq!(metadata as usize, data.len());
+    /// assert_eq!(NonNull::new(data_ptr as *mut u8), Some(ptr.cast()));
+    /// ```
+    #[inline]
+    pub const fn split(&self) -> Option<(*const u8, *const u8)> {
+        if Self::is_fat_pointer() {
+            // SAFETY: `inner` is a fat pointer
+            let (ptr, fat) = unsafe { self.split_mut_unchecked() };
+            Some((*ptr as *const u8, *fat as *const u8))
+        } else {
+            None
+        }
+    }
+
+    /// Split fat pointer into actual pointer and metadata. Both
+    /// are returned as mutable references to the parts of the
+    /// fat pointer, so they can actually change the pointer
+    /// inside the `NonNull` object.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use dsrs::mem::NonNull;
+    /// #
+    /// let data = [1, 2, 3, 4];
+    /// let mut ptr = NonNull::<[u32]>::from(&data);
+    ///
+    /// let (data_ptr, metadata) = ptr.split_mut().unwrap();
+    ///
+    /// // the metada for a slice is its length
+    /// assert_eq!(*metadata as usize, data.len());
+    ///
+    /// // the references actually mutate the NonNull
+    /// *data_ptr = 0x1 as *mut u8;
+    /// assert_eq!(ptr.as_ptr() as *mut u8, 0x1 as *mut u8);
+    /// ```
+    #[inline]
+    pub const fn split_mut(&mut self) -> Option<(&mut *mut u8, &mut *mut u8)> {
+        if Self::is_fat_pointer() {
+            // SAFETY: `inner` is a fat pointer
+            Some(unsafe { self.split_mut_unchecked() })
+        } else {
+            None
+        }
+    }
+
+    /// Split fat pointer into actual pointer and metadata. Both
+    /// are returned as mutable references to the parts of the
+    /// fat pointer, so they can actually change the pointer
+    /// inside the `NonNull` object, without a mutable
+    /// reference.
+    ///
+    /// See [`split_mut`](NonNull::split_mut) for examples.
+    ///
+    /// # Safety
+    ///
+    /// This is safe only if `*mut T` is a fat pointer. Otherwise,
+    /// the metada reference is invalid.
+    #[inline]
+    pub const unsafe fn split_mut_unchecked(&self) -> (&mut *mut u8, &mut *mut u8) {
+        let addr = self as *const Self as *mut *mut u8;
+        (&mut *addr, &mut *addr.offset(1))
     }
 }
 
