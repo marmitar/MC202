@@ -189,7 +189,7 @@ impl Layout {
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.
-    #[inline]
+    #[inline(always)]
     pub const fn inner(self) -> std::alloc::Layout {
         self.0
     }

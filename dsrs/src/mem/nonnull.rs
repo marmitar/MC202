@@ -67,7 +67,7 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Recover inner [`std::ptr::NonNull`] from `NonNull`.
-    #[inline]
+    #[inline(always)]
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0
     }
