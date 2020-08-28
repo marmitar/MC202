@@ -98,16 +98,16 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// // metada for a slice is the length
     /// assert_eq!(metadata as usize, data.len());
-    /// assert_eq!(NonNull::new(data_ptr as *mut u8), Some(ptr.cast()));
+    /// assert_eq!(NonNull::new(data_ptr), Some(ptr.cast()));
     /// ```
     #[inline]
-    pub const fn split(&self) -> Option<(*const u8, *const u8)> {
-        if Self::is_fat_pointer() {
-            // SAFETY: `inner` is a fat pointer
-            let (ptr, fat) = unsafe { self.split_mut_unchecked() };
-            Some((*ptr as *const u8, *fat as *const u8))
-        } else {
-            None
+    pub const fn split(&self) -> Option<(*mut u8, *mut u8)> {
+        // SAFETY: no mutation happens, only reads
+        let this = unsafe { &mut *(self as *const Self as *mut Self) };
+
+        match this.split_mut() {
+            Some((data, metadata)) => Some((*data, *metadata)),
+            None => None
         }
     }
 
@@ -129,9 +129,9 @@ impl<T: ?Sized> NonNull<T> {
     /// // the metada for a slice is its length
     /// assert_eq!(*metadata as usize, data.len());
     ///
-    /// // the references actually mutate the NonNull
+    /// // the references can actually mutate the NonNull
     /// *data_ptr = 0x1 as *mut u8;
-    /// assert_eq!(ptr.as_ptr() as *mut u8, 0x1 as *mut u8);
+    /// assert_eq!(ptr.cast().as_ptr(), 0x1 as *mut u8);
     /// ```
     #[inline]
     pub const fn split_mut(&mut self) -> Option<(&mut *mut u8, &mut *mut u8)> {
@@ -146,8 +146,7 @@ impl<T: ?Sized> NonNull<T> {
     /// Split fat pointer into actual pointer and metadata. Both
     /// are returned as mutable references to the parts of the
     /// fat pointer, so they can actually change the pointer
-    /// inside the `NonNull` object, without a mutable
-    /// reference.
+    /// inside the `NonNull` object.
     ///
     /// See [`split_mut`](NonNull::split_mut) for examples.
     ///
@@ -156,7 +155,7 @@ impl<T: ?Sized> NonNull<T> {
     /// This is safe only if `*mut T` is a fat pointer. Otherwise,
     /// the metada reference is invalid.
     #[inline]
-    pub const unsafe fn split_mut_unchecked(&self) -> (&mut *mut u8, &mut *mut u8) {
+    pub const unsafe fn split_mut_unchecked(&mut self) -> (&mut *mut u8, &mut *mut u8) {
         let addr = self as *const Self as *mut *mut u8;
         (&mut *addr, &mut *addr.offset(1))
     }
