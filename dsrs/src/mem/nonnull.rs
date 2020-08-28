@@ -33,7 +33,7 @@ impl<T: ?Sized> NonNull<T> {
     /// Read [`std::ptr::NonNull::new`]
     #[inline]
     pub const fn new(ptr: *mut T) -> Option<Self> {
-        if ! ptr.is_null() {
+        if !ptr.is_null() {
             // SAFETY: already checked for null
             Some(unsafe { Self::new_unchecked(ptr) })
         } else {
@@ -116,7 +116,7 @@ mod tests {
     /// all have the same size, independently if `T` is an
     /// [Exotically Sized Type](https://doc.rust-lang.org/nomicon/exotic-sizes.html)
     #[test]
-    fn packed_option() {
+    fn packed_option_size() {
         use std::fmt::Debug;
         use std::mem::size_of;
 
@@ -134,5 +134,25 @@ mod tests {
         assert_size::<dyn Debug>("trait object");
         assert_size::<str>("slice type");
         assert_size::<Void>("empty type")
+    }
+
+    #[test]
+    fn equivalent_methods() {
+        use std::ptr::NonNull as Inner;
+
+        let val = "string";
+        let ptr = NonNull::from(val);
+
+        assert_eq!(ptr.inner(), Inner::from(val));
+        // SAFETY: `ptr` is a valid reference
+        unsafe { assert_eq!(ptr.as_ref(), ptr.inner().as_ref()) };
+        // SAFETY: `val` is not being used, so it can be mutable,
+        // also `str` will not be mutated
+        unsafe { assert_eq!(ptr.clone().as_mut(), ptr.inner().as_mut()) };
+
+        let ptr = val as *const str as *mut str;
+        assert_eq!(NonNull::new(ptr), Inner::new(ptr).map(NonNull));
+        let null = std::ptr::null_mut::<i32>();
+        assert_eq!(NonNull::new(null), Inner::new(null).map(NonNull));
     }
 }
