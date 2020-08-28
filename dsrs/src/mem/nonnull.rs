@@ -59,7 +59,7 @@ impl<T: ?Sized> NonNull<T> {
         &mut *self.0.as_ptr()
     }
 
-    /// Transmute `NonNull` into inner [`std::ptr::NonNull`]
+    /// Recover inner [`std::ptr::NonNull`] from `NonNull`
     #[inline]
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0

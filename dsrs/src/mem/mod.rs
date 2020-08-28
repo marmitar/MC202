@@ -3,4 +3,7 @@
 mod nonnull;
 pub use nonnull::NonNull;
 
-mod alloc;
+mod layout;
+pub use layout::Layout;
+
+// mod alloc;
