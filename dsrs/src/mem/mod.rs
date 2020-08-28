@@ -3,6 +3,7 @@
 mod nonnull;
 pub use nonnull::NonNull;
 
+#[macro_use]
 mod layout;
 pub use layout::Layout;
 

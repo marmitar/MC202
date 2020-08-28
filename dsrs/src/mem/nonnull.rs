@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Pointer, Formatter, Result};
 
 
-/// Wrapper for [`std::ptr::NonNull`]
+/// Wrapper for [`std::ptr::NonNull`].
 ///
 /// This wrapper makes [`from`](NonNull::from), [`as_ref`](NonNull::as_ref)
 /// and [`as_mut`](NonNull::as_mut) as `const`.
@@ -16,13 +16,14 @@ impl<T: ?Sized> NonNull<T> {
         Self(std::ptr::NonNull::new_unchecked(ptr))
     }
 
-    /// Creates a new `NonNull` from a reference
+    /// Creates a new `NonNull` from a reference.
     ///
     /// Since a valid reference is never null, this is always safe.
     /// This is also conceptually equivalent to `value as
     /// *const T *mut T`, which is safe and guaranteed to be non null.
     ///
-    /// Note: implemented as method so that it can be `const`
+    /// Note: implemented as a `const` method intead of implementing
+    /// the trait [`From`].
     #[inline]
     pub const fn from(value: &T) -> Self {
         let ptr = value as *const T as *mut T;
@@ -59,7 +60,7 @@ impl<T: ?Sized> NonNull<T> {
         &mut *self.0.as_ptr()
     }
 
-    /// Recover inner [`std::ptr::NonNull`] from `NonNull`
+    /// Recover inner [`std::ptr::NonNull`] from `NonNull`.
     #[inline]
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0
