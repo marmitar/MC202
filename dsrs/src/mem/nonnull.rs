@@ -20,7 +20,7 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// Since a valid reference is never null, this is always safe.
     /// This is also conceptually equivalent to `value as
-    /// *const T *mut T`, which is safe and garanteed to be non null.
+    /// *const T *mut T`, which is safe and guaranteed to be non null.
     ///
     /// Note: implemented as method so that it can be `const`
     #[inline]
@@ -112,7 +112,7 @@ impl<T: ?Sized> Pointer for NonNull<T> {
 mod tests {
     use super::*;
 
-    /// Garantee that `*mut T`, `NonNull<T>` and `Option<NonNull<T>>`
+    /// Guarantee that `*mut T`, `NonNull<T>` and `Option<NonNull<T>>`
     /// all have the same size, independently if `T` is an
     /// [Exotically Sized Type](https://doc.rust-lang.org/nomicon/exotic-sizes.html)
     #[test]
@@ -136,6 +136,7 @@ mod tests {
         assert_size::<Void>("empty type")
     }
 
+    /// Guarantees that `NonNull` methods are equivalent
     #[test]
     fn equivalent_methods() {
         use std::ptr::NonNull as Inner;
