@@ -1,6 +1,4 @@
 use std::fmt::{Debug, Pointer, Formatter, Result};
-use std::hash::{Hash, Hasher};
-use std::cmp::Ordering;
 
 
 /// Wrapper for [`std::ptr::NonNull`]
@@ -95,19 +93,6 @@ impl<T: ?Sized> PartialEq for NonNull<T> {
 }
 impl<T: ?Sized> Eq for NonNull<T> {}
 
-impl<T: ?Sized> Ord for NonNull<T> {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0)
-    }
-}
-impl<T: ?Sized> PartialOrd for NonNull<T> {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-}
-
 impl<T: ?Sized> Debug for NonNull<T> {
     #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -122,12 +107,6 @@ impl<T: ?Sized> Pointer for NonNull<T> {
     }
 }
 
-impl<T: ?Sized> Hash for NonNull<T> {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.inner().hash(state)
-    }
-}
 
 #[cfg(test)]
 mod tests {
