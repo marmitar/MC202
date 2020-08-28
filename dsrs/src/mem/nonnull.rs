@@ -4,6 +4,9 @@ use std::cmp::Ordering;
 
 
 /// Wrapper for [`std::ptr::NonNull`]
+///
+/// This wrapper makes [`from`](NonNull::from), [`as_ref`](NonNull::as_ref)
+/// and [`as_mut`](NonNull::as_mut) as `const`.
 #[repr(transparent)]
 pub struct NonNull<T: ?Sized>(pub std::ptr::NonNull<T>);
 
