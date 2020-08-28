@@ -96,6 +96,7 @@ impl Layout {
     pub const fn padding_needed_for(&self, align: usize) -> usize {
         let len = self.size();
 
+        // SAFETY: `Layout` type guarantees
         let len_rounded_up = len.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
         len_rounded_up.wrapping_sub(len)
     }
@@ -107,6 +108,7 @@ impl Layout {
         // SAFETY: cannot overflow
         let new_size = self.size() + pad;
 
+        // SAFETY: guaranteed by `padding_needed_for`
         unsafe { Self::from_size_align_unchecked(new_size, self.align()) }
     }
 
@@ -135,6 +137,54 @@ impl Layout {
             Err(err) => Err(err),
             Ok(layout) => Ok((layout, offset))
         }
+    }
+
+    /// Layout for a `#[repr(C)]` struct
+    ///
+    /// Calculate the layout of the struct and the offset of its fields.
+    /// Returns error on arithmetic overflow.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use dsrs::mem::Layout;
+    ///
+    /// #[repr(C)]
+    /// struct Struct {
+    ///     num: i32,
+    ///     text: String
+    /// }
+    ///
+    /// let fields = [Layout::new::<i32>(), Layout::new::<String>()];
+    /// let (layout, [num_offset, text_offset]) = Layout::for_repr_c(fields).unwrap();
+    ///
+    /// assert_eq!(layout, Layout::new::<Struct>());
+    /// assert_eq!(num_offset, 0);
+    /// ```
+    #[inline]
+    pub const fn for_repr_c<const N: usize>(fields: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
+        const INITIAL: Layout = match Layout::from_size_align(0, 1) {
+            Ok(layout) => layout,
+            Err(_) => unreachable!()
+        };
+
+        let mut offsets = [0; N];
+        let mut layout = INITIAL;
+
+        let mut i = 0;
+        while i < N {
+            let (new, offset) = match layout.extend(fields[i]) {
+                Ok(data) => data,
+                Err(err) => return Err(err)
+            };
+
+            offsets[i] = offset;
+            layout = new;
+
+            i += 1;
+        }
+
+        Ok((layout, offsets))
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`
@@ -185,5 +235,46 @@ mod tests {
         assert_eq!(layout1.extend(layout2), layout1.inner().extend(layout2.inner()).map(|(a, b)| (Layout(a), b)));
         let overflow = Layout::from_size_align(MAX - 4, 2).unwrap();
         assert_eq!(layout2.extend(overflow), layout2.inner().extend(overflow.inner()).map(|(a, b)| (Layout(a), b)));
+    }
+
+    #[test]
+    fn unsized_repr_c() {
+        #[derive(Debug, Eq, PartialEq)]
+        #[repr(C)]
+        struct Unsized {
+            first: u64,
+            other: [u64]
+        }
+
+        impl PartialEq<[u64]> for Unsized {
+            fn eq(&self, other: &[u64]) -> bool {
+                match other {
+                    [first, rest @ ..] => &self.first == first && &self.other == rest,
+                    [] => false
+                }
+            }
+        }
+
+        macro_rules! len {
+            ($ptr:ident) => {
+                &mut *(&mut $ptr as *mut _ as *mut usize).offset(1)
+            };
+        }
+
+        let values = [5, 1, 2, 3, 4];
+        let mut ptr = &values as &[u64];
+        assert_eq!(values.len(), unsafe { *len!(ptr) });
+
+        let val = unsafe {
+            let val: Box<[u64]> = Box::new(values);
+            let mut ptr = Box::into_raw(val);
+            *len!(ptr) = *len!(ptr) - 1;
+
+            Box::from_raw(ptr as *mut Unsized)
+        };
+        assert_eq!(val.as_ref(), &values as &[u64]);
+
+        let fields = [Layout::new::<u64>(), Layout::for_value(&values[1..])];
+        assert_eq!(Layout::for_repr_c(fields), Ok((Layout::for_value(val.as_ref()), [0, 8])))
     }
 }
