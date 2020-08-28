@@ -31,7 +31,7 @@ const fn max(a: usize, b: usize) -> usize {
     }
 }
 
-/// Wrapper for [`std::alloc::Layout`]
+/// Wrapper for [`std::alloc::Layout`].
 ///
 /// This wrapper makes most methods `const`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -139,10 +139,11 @@ impl Layout {
         }
     }
 
-    /// Layout for a `#[repr(C)]` struct
+    /// Calculate the layout for a `#[repr(C)]` struct and the offset
+    /// of its fields, based on the layout of each field. Returns
+    /// error on arithmetic overflow. See [`extend`](std::alloc::Layout::extend).
     ///
-    /// Calculate the layout of the struct and the offset of its fields.
-    /// Returns error on arithmetic overflow.
+    /// For a more ergonomic implementation, see [`layout_repr_c`] macro.
     ///
     /// # Example
     ///
@@ -187,11 +188,153 @@ impl Layout {
         Ok((layout, offsets))
     }
 
-    /// Recover inner [`std::alloc::Layout`] from `Layout`
+    /// Recover inner [`std::alloc::Layout`] from `Layout`.
     #[inline]
     pub const fn inner(self) -> std::alloc::Layout {
         self.0
     }
+}
+
+/// Build the layout for `#[repr(C)]` based on field types. This macro
+/// takes an "array" of types calculates de layout for each type
+/// then combines them with [`Layout::for_repr_c`] to build the final
+/// struct layout. The macro also returns the offset in bytes
+/// for each field, both results are inside a [`Result`]. This
+/// macro only returns an error on arithmetic overflow.
+///
+/// # Basic usage
+///
+/// ```
+/// use dsrs::mem::Layout;
+/// use dsrs::layout_repr_c;
+///
+/// #[repr(C)]
+/// struct Struct<T> {
+///     id: u8,
+///     data: T
+/// }
+///
+/// let (layout, offsets) = layout_repr_c!([u8, f32]).unwrap();
+/// // this is equivalent to
+/// let (layout_, offsets_) = Layout::for_repr_c([Layout::new::<u8>(), Layout::new::<f32>()]).unwrap();
+///
+/// assert_eq!(layout, Layout::new::<Struct<f32>>());
+/// # assert_eq!((layout, offsets), (layout_, offsets_));
+/// ```
+///
+/// # Unsized Types
+///
+/// For [exotically sized types](https://doc.rust-lang.org/nomicon/exotic-sizes.html)
+/// the layout can't be know just from the type, so it is necessary
+/// the actual value present at the field. Since only the last field
+/// of a struct can be unsized, the macro receives all [`Sized`]
+/// fields normally, then the last one comes after a semicolon (`;`)
+/// with the format `Type = value`.
+///
+/// ```
+/// # use dsrs::mem::Layout;
+/// # use dsrs::layout_repr_c;
+/// #
+/// #[repr(C)]
+/// struct Unsized {
+///     some_num: f64,
+///     dst: str
+/// }
+///
+/// // layout for an `Unsized` with "string" in field `Unsized::dst`
+/// let (layout, offsets) = layout_repr_c!([f64; str = "string"]).unwrap();
+/// #
+/// # assert_eq!(offsets, [0, 8]);
+/// ```
+///
+/// Sometimes, the actual struct contains only one field, wich may be
+/// unsized. In this case, the semicolon is not necessary.
+///
+/// ```
+/// # use dsrs::mem::Layout;
+/// # use dsrs::layout_repr_c;
+/// use std::fmt::Debug;
+///
+/// #[repr(C)]
+/// struct Dynamic {
+///     dst: dyn Debug
+/// }
+///
+/// let (layout, offsets) = layout_repr_c!([dyn Debug = 2i32]).unwrap();
+/// // the semicolon may apper, if desired
+/// let (layout_, offsets_) = layout_repr_c!([; dyn Debug = 2i32]).unwrap();
+///
+/// // for this specific `Dynamic` object, this layout is equivalent
+/// assert_eq!((layout, offsets), layout_repr_c!([i32]).unwrap());
+/// # assert_eq!((layout, offsets), (layout_, offsets_));
+/// ```
+///
+/// For empty types, the usage is straightforward.
+///
+/// ```
+/// # use dsrs::mem::Layout;
+/// # use dsrs::layout_repr_c;
+/// #
+/// #[repr(C)]
+/// struct Empty { }
+///
+/// let (layout, offsets) = layout_repr_c!([]).unwrap();
+///
+/// assert_eq!(layout, Layout::new::<Empty>());
+/// assert_eq!(offsets, []);
+/// ```
+///
+/// For never types, no layout will ever make sense.
+///
+/// # Specifying only the layout or the offsets
+///
+/// Normally, the macro returns both the layout for the struct
+/// and the offset of its fields, just like [`Layout::for_repr_c`].
+/// If it is desired only one or another, it can be specified
+/// before the array with the field types.
+///
+/// ```
+/// # use dsrs::mem::Layout;
+/// # use dsrs::layout_repr_c;
+/// #
+/// #[repr(C)]
+/// struct Struct {
+///     x: f32,
+///     y: i128
+/// }
+///
+/// let (layout, offsets) = layout_repr_c!([f32, i128]).unwrap();
+///
+/// // only the layouts
+/// let layout_ = layout_repr_c!(layout [f32, i128]).unwrap();
+/// // only the offsets
+/// let offsets_ = layout_repr_c!(offsets [f32, i128]).unwrap();
+/// #
+/// # assert_eq!(layout, layout_);
+/// # assert_eq!(offsets, offsets_);
+/// ```
+#[macro_export]
+macro_rules! layout_repr_c {
+    // get only the layout
+    (layout $fields: tt) => {
+        match layout_repr_c!($fields) { Err(err) => Err(err), Ok((layout, _)) => Ok(layout) }
+    };
+    // get only the offsets
+    (offsets $fields: tt) => {
+        match layout_repr_c!($fields) { Err(err) => Err(err), Ok((_, offsets)) => Ok(offsets) }
+    };
+    // from array of `Sized` types
+    ([$($field: ty),*]) => {
+        Layout::for_repr_c([$( Layout::new::<$field>(), )*])
+    };
+    // only one unsized type
+    ([$last: ty = $value: expr]) => {
+        Layout::for_repr_c([Layout::for_value::<$last>(&$value)])
+    };
+    // unsized struct, that is, struct with unsized last field
+    ([$($field: ty),*; $last: ty = $value: expr]) => {
+        Layout::for_repr_c([$( Layout::new::<$field>(), )* Layout::for_value::<$last>(&$value)])
+    };
 }
 
 
@@ -276,5 +419,38 @@ mod tests {
 
         let fields = [Layout::new::<u64>(), Layout::for_value(&values[1..])];
         assert_eq!(Layout::for_repr_c(fields), Ok((Layout::for_value(val.as_ref()), [0, 8])))
+    }
+
+    #[test]
+    fn repr_c_macro() {
+        #[repr(C)]
+        struct Struct {
+            a: u32,
+            b: u32
+        }
+        #[repr(C)]
+        struct Int {
+            num: i32
+        }
+
+        assert_eq!(Ok((Layout::new::<()>(), [])), layout_repr_c!([]));
+        assert_eq!(Ok((Layout::new::<Int>(), [0])), layout_repr_c!([i32]));
+
+        assert_eq!(Ok((Layout::new::<Int>(), [0])), layout_repr_c!([i32 = 2]));
+        assert_eq!(Ok((Layout::new::<Int>(), [0])), layout_repr_c!([; i32 = 2]));
+        assert_eq!(Ok((Layout::new::<Struct>(), [0, 4])), layout_repr_c!([u32; u32 = 3]));
+
+        assert_eq!(Ok(Layout::new::<()>()), layout_repr_c!(layout []));
+        assert_eq!(Ok(Layout::new::<Int>()), layout_repr_c!(layout [i32]));
+        assert_eq!(Ok(Layout::new::<Struct>()), layout_repr_c!(layout [u32, u32]));
+
+        assert_eq!(Ok([]), layout_repr_c!(offsets []));
+        assert_eq!(Ok([0]), layout_repr_c!(offsets [i32]));
+        assert_eq!(Ok([0, 4]), layout_repr_c!(offsets [u32, u32]));
+
+        assert_eq!(Ok(Layout::new::<Int>()), layout_repr_c!(layout [i32 = 2]));
+        assert_eq!(Ok(Layout::new::<Struct>()), layout_repr_c!(layout [u32; u32 = 3]));
+        assert_eq!(Ok([0]), layout_repr_c!(offsets [i32 = 2]));
+        assert_eq!(Ok([0, 4]), layout_repr_c!(offsets [u32; u32 = 3]));
     }
 }
