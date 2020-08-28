@@ -76,6 +76,11 @@ impl<T: ?Sized> Clone for NonNull<T> {
     fn clone(&self) -> Self {
         Self(self.0)
     }
+
+    #[inline(always)]
+    fn clone_from(&mut self, other: &Self) {
+        self.0 = other.0
+    }
 }
 impl<T: ?Sized> Copy for NonNull<T> {}
 
