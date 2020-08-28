@@ -8,6 +8,7 @@
 #![feature(const_result)]
 #![feature(const_panic)]
 #![feature(const_unreachable_unchecked)]
+#![feature(const_generics)]
 #![feature(allocator_api)]
 #![feature(alloc_layout_extra)]
 #![feature(layout_for_ptr)]
