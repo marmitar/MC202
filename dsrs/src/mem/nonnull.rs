@@ -54,11 +54,21 @@ impl<T: ?Sized> NonNull<T> {
     /// Creates a new `NonNull` from a reference.
     ///
     /// Since a valid reference is never null, this is always safe.
-    /// This is also conceptually equivalent to `value as
-    /// *const T *mut T`, which is safe and guaranteed to be non null.
+    /// This is also conceptually equivalent to `&value as *const T
+    /// as *mut T`, which is safe and guaranteed to be non null.
     ///
     /// Note: implemented as a `const` method intead of implementing
     /// the trait [`From`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use dsrs::mem::NonNull;
+    /// #
+    /// let mut x = 2;
+    /// let nonnull = NonNull::from(&x);
+    ///
+    /// assert_eq!(nonnull.as_ptr(), &mut x as *mut _);
+    /// ```
     #[inline]
     pub const fn from(value: &T) -> Self {
         let ptr = value as *const T as *mut T;
@@ -67,12 +77,31 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Recover inner [`std::ptr::NonNull`] from `NonNull`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use dsrs::mem::NonNull;
+    /// #
+    /// let val = "string";
+    /// let wrapper = NonNull::from(val);
+    /// let nonnull = std::ptr::NonNull::from(val);
+    ///
+    /// assert_eq!(wrapper.inner(), nonnull);
+    /// ```
     #[inline(always)]
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0
     }
 
     /// This is true when `NonNull<T>` is a fat pointer.
+    ///
+    /// # Examples
+    /// ```
+    /// # use dsrs::mem::NonNull;
+    /// #
+    /// assert_eq!(NonNull::<[u8]>::is_fat_pointer(), true);
+    /// assert_eq!(NonNull::<f32>::is_fat_pointer(), false);
+    /// ```
     #[inline]
     pub const fn is_fat_pointer() -> bool {
         use std::mem::size_of;
@@ -85,20 +114,20 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Split fat pointer into actual pointer and metadata.
+    /// Returns `None` if `*mut T` is *not* a fat pointer.
     ///
-    /// # Example
-    ///
+    /// # Examples
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
     /// let data = [1, 2, 3, 4];
-    /// let ptr = NonNull::<[u32]>::from(&data);
+    /// let nonnull = NonNull::<[u32]>::from(&data);
     ///
-    /// let (data_ptr, metadata) = ptr.split().unwrap();
+    /// let (data_ptr, metadata) = nonnull.split().unwrap();
     ///
-    /// // metada for a slice is the length
+    /// // metadata for a slice is the length
     /// assert_eq!(metadata as usize, data.len());
-    /// assert_eq!(NonNull::new(data_ptr), Some(ptr.cast()));
+    /// assert_eq!(NonNull::new(data_ptr), Some(nonnull.cast()));
     /// ```
     #[inline]
     pub const fn split(&self) -> Option<(*mut u8, *mut u8)> {
@@ -116,8 +145,7 @@ impl<T: ?Sized> NonNull<T> {
     /// fat pointer, so they can actually change the pointer
     /// inside the `NonNull` object.
     ///
-    /// # Example
-    ///
+    /// # Examples
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -126,7 +154,7 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// let (data_ptr, metadata) = ptr.split_mut().unwrap();
     ///
-    /// // the metada for a slice is its length
+    /// // the metadata for a slice is its length
     /// assert_eq!(*metadata as usize, data.len());
     ///
     /// // the references can actually mutate the NonNull
