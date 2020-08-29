@@ -1,3 +1,6 @@
+use super::Layout;
+
+
 /// Tuple with generic types to used to
 /// indicate the types on a struct.
 /// Automatically implemented up to arity
@@ -10,11 +13,24 @@
 unsafe trait FieldTuple {
     /// The number of elements in the tuple.
     const ARITY: usize;
-
-    /// The starting tuple
+    /// The starting (sub)tuple
     type Start: FieldTuple + Sized;
     /// The last field on the tuple
     type Last: ?Sized;
+
+    /// Layout for its [`FieldTuple::Start`].
+    #[doc(hidden)]
+    const START_LAYOUT: Layout;
+
+    /// Build the layout for the equivalent `#[repr(C)]`
+    /// struct. See [`Layout::for_repr_c`].
+    #[inline]
+    fn layout(val: &Self::Last) -> Layout {
+        match Self::START_LAYOUT.extend(Layout::for_value(val)) {
+            Ok((layout, _)) => layout.pad_to_align(),
+            Err(_) => unreachable!()
+        }
+    }
 }
 
 /// Count identifiers.
@@ -37,6 +53,17 @@ macro_rules! skip_last {
     };
 }
 
+/// Extend all layouts, but skip the last one
+macro_rules! extend_layout_skip_last {
+    // similiar to skip last
+    ([$last: ident] => [$($type: ident),*]) => {
+        Layout::EMPTY.extend_many([$(Layout::new::<$type>(),)*])
+    };
+    ([$head: ident $(, $rest: ident)+] => [$($type: ident),*]) => {
+        extend_layout_skip_last!( [$($rest),+] => [$($type,)* $head] )
+    };
+}
+
 /// Get the last identifier
 macro_rules! last {
     // stop recursion, last identifier
@@ -49,6 +76,7 @@ macro_rules! last {
     };
 }
 
+
 // Implement type list for generic tuple. The
 // very last type identifier might be unsized.
 //
@@ -59,18 +87,27 @@ macro_rules! impl_field_tuple {
     () => {
         unsafe impl FieldTuple for () {
             const ARITY: usize = 0;
-
             type Start = ();
-            type Last = !;
+            type Last = ();
+            const START_LAYOUT: Layout = Layout::EMPTY;
+
+            #[inline]
+            fn layout(_: &()) -> Layout {
+                Layout::EMPTY
+            }
         }
     };
     // generic tuple
     ($($type: ident),+) => {
         unsafe impl<$($type),+: ?Sized> FieldTuple for ($($type,)+) {
             const ARITY: usize = count!($($type),+);
-
             type Start = skip_last!([$($type),+] => []);
             type Last = last!($($type),+);
+
+            const START_LAYOUT: Layout = match extend_layout_skip_last!([$($type),+] => []) {
+                Ok((layout, _)) => layout,
+                Err(_) => unreachable!()
+            };
         }
     };
 }

@@ -13,6 +13,5 @@
 #![feature(allocator_api)]
 #![feature(alloc_layout_extra)]
 #![feature(layout_for_ptr)]
-#![feature(never_type)]
 
 pub mod mem;
