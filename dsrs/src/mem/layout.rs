@@ -95,9 +95,9 @@ impl Layout {
     #[inline]
     pub const fn padding_needed_for(&self, align: usize) -> usize {
         let len = self.size();
-
         // SAFETY: `Layout` type guarantees
         let len_rounded_up = len.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
+
         len_rounded_up.wrapping_sub(len)
     }
 
@@ -139,6 +139,26 @@ impl Layout {
         }
     }
 
+    /// Const version of [`PartialEq::eq`].
+    #[inline]
+    pub const fn eq(&self, other: &Self) -> bool {
+        self.size() == other.size() && self.align() == other.align()
+    }
+
+    /// Layout for an empty `#[repr(C)]` struct.
+    ///
+    /// ```
+    /// # use dsrs::mem::Layout;
+    /// #[repr(C)]
+    /// struct Empty {}
+    ///
+    /// assert_eq!(Layout::EMPTY, Layout::new::<Empty>());
+    /// ```
+    pub const EMPTY: Layout = match Layout::from_size_align(0, 1) {
+        Ok(layout) if layout.eq(&layout.pad_to_align()) => layout,
+        _ => unreachable!()
+    };
+
     /// Calculate the layout for a `#[repr(C)]` struct and the offset
     /// of its fields, based on the layout of each field. Returns
     /// error on arithmetic overflow. See [`extend`](std::alloc::Layout::extend).
@@ -164,13 +184,8 @@ impl Layout {
     /// ```
     #[inline]
     pub const fn for_repr_c<const N: usize>(fields: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
-        const INITIAL: Layout = match Layout::from_size_align(0, 1) {
-            Ok(layout) => layout,
-            Err(_) => unreachable!()
-        };
-
         let mut offsets = [0; N];
-        let mut layout = INITIAL;
+        let mut layout = Self::EMPTY;
 
         let mut i = 0;
         while i < N {
@@ -185,7 +200,7 @@ impl Layout {
             i += 1;
         }
 
-        Ok((layout, offsets))
+        Ok((layout.pad_to_align(), offsets))
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.
