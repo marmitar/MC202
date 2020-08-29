@@ -159,6 +159,28 @@ impl Layout {
         _ => unreachable!()
     };
 
+    /// Repeatedly apply [`Layout::extend`].
+    #[inline]
+    pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
+        let mut offsets = [0; N];
+        let mut layout = *self;
+
+        let mut i = 0;
+        while i < N {
+            let (new, offset) = match layout.extend(layouts[i]) {
+                Ok(data) => data,
+                Err(err) => return Err(err)
+            };
+
+            offsets[i] = offset;
+            layout = new;
+
+            i += 1;
+        }
+
+        Ok((layout, offsets))
+    }
+
     /// Calculate the layout for a `#[repr(C)]` struct and the offset
     /// of its fields, based on the layout of each field. Returns
     /// error on arithmetic overflow. See [`extend`](std::alloc::Layout::extend).
@@ -184,23 +206,10 @@ impl Layout {
     /// ```
     #[inline]
     pub const fn for_repr_c<const N: usize>(fields: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
-        let mut offsets = [0; N];
-        let mut layout = Self::EMPTY;
-
-        let mut i = 0;
-        while i < N {
-            let (new, offset) = match layout.extend(fields[i]) {
-                Ok(data) => data,
-                Err(err) => return Err(err)
-            };
-
-            offsets[i] = offset;
-            layout = new;
-
-            i += 1;
+        match Self::EMPTY.extend_many(fields) {
+            Ok((layout, offsets)) => Ok((layout.pad_to_align(), offsets)),
+            err => err
         }
-
-        Ok((layout.pad_to_align(), offsets))
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.
