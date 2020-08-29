@@ -1,3 +1,4 @@
+#![feature(core_intrinsics)]
 #![feature(const_fn)]
 #![feature(const_mut_refs)]
 #![feature(const_raw_ptr_deref)]
@@ -10,6 +11,7 @@
 #![feature(const_unreachable_unchecked)]
 #![feature(const_generics)]
 #![feature(const_ptr_offset)]
+#![feature(const_likely)]
 #![feature(allocator_api)]
 #![feature(alloc_layout_extra)]
 #![feature(layout_for_ptr)]

@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Pointer, Formatter, Result};
+use std::intrinsics::likely;
 
 
 /// Wrapper for [`std::ptr::NonNull`].
@@ -19,7 +20,7 @@ impl<T: ?Sized> NonNull<T> {
     /// Read [`std::ptr::NonNull::new`]
     #[inline]
     pub const fn new(ptr: *mut T) -> Option<Self> {
-        if !ptr.is_null() {
+        if likely(!ptr.is_null()) {
             // SAFETY: already checked for null
             Some(unsafe { Self::new_unchecked(ptr) })
         } else {
@@ -60,7 +61,8 @@ impl<T: ?Sized> NonNull<T> {
     /// Note: implemented as a `const` method intead of implementing
     /// the trait [`From`].
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -78,7 +80,8 @@ impl<T: ?Sized> NonNull<T> {
 
     /// Recover inner [`std::ptr::NonNull`] from `NonNull`.
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -95,7 +98,8 @@ impl<T: ?Sized> NonNull<T> {
 
     /// This is true when `NonNull<T>` is a fat pointer.
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -116,7 +120,8 @@ impl<T: ?Sized> NonNull<T> {
     /// Split fat pointer into actual pointer and metadata.
     /// Returns `None` if `*mut T` is *not* a fat pointer.
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -145,7 +150,8 @@ impl<T: ?Sized> NonNull<T> {
     /// fat pointer, so they can actually change the pointer
     /// inside the `NonNull` object.
     ///
-    /// # Examples
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::NonNull;
     /// #
@@ -163,7 +169,7 @@ impl<T: ?Sized> NonNull<T> {
     /// ```
     #[inline]
     pub const fn split_mut(&mut self) -> Option<(&mut *mut u8, &mut *mut u8)> {
-        if Self::is_fat_pointer() {
+        if likely(Self::is_fat_pointer()) {
             // SAFETY: `inner` is a fat pointer
             Some(unsafe { self.split_mut_unchecked() })
         } else {
