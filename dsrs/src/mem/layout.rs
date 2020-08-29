@@ -145,7 +145,7 @@ impl Layout {
         self.size() == other.size() && self.align() == other.align()
     }
 
-    /// Layout for an empty `#[repr(C)]` struct.
+    /// Layout for an empty, zero-sized `#[repr(C)]` struct.
     ///
     /// ```
     /// # use dsrs::mem::Layout;
@@ -293,22 +293,22 @@ impl Layout {
 /// # assert_eq!((layout, offsets), (layout_, offsets_));
 /// ```
 ///
-/// For empty types, the usage is straightforward.
+/// For ZSTs, the usage is straightforward.
 ///
 /// ```
 /// # use dsrs::mem::Layout;
 /// # use dsrs::layout_repr_c;
 /// #
 /// #[repr(C)]
-/// struct Empty { }
+/// struct ZST { }
 ///
 /// let (layout, offsets) = layout_repr_c!([]).unwrap();
 ///
-/// assert_eq!(layout, Layout::new::<Empty>());
+/// assert_eq!(layout, Layout::new::<ZST>());
 /// assert_eq!(offsets, []);
 /// ```
 ///
-/// For never types, no layout will ever make sense.
+/// For empty types, no layout will ever make sense.
 ///
 /// # Specifying only the layout or the offsets
 ///

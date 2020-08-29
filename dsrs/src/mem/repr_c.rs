@@ -83,7 +83,7 @@ macro_rules! last {
 // `impl_field_tuple(A, B, C)` will impl trait for
 // `(A, B, C)` with `<A, B, C: ?Sized>`.
 macro_rules! impl_field_tuple {
-    // the unit
+    // the unit, for a ZST repr(C)
     () => {
         unsafe impl FieldTuple for () {
             const ARITY: usize = 0;
