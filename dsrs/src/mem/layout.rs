@@ -1,10 +1,20 @@
 use std::alloc::{Layout as Inner, LayoutErr};
+use std::mem::{size_of, align_of};
+use std::hint::unreachable_unchecked;
+use std::intrinsics::{likely, unlikely};
+
+macro_rules! assume {
+    ($expr: expr) => {
+        if !($expr) {
+            unreachable_unchecked()
+        }
+    };
+}
 
 
 #[inline(always)]
 /// Get `(size, align)` for [`Sized`] type
 const fn size_align<T>() -> (usize, usize) {
-    use std::mem::{size_of, align_of};
     (size_of::<T>(), align_of::<T>())
 }
 
@@ -24,7 +34,7 @@ const unsafe fn size_align_val_raw<T: ?Sized>(ptr: *const T) -> (usize, usize) {
 /// Maximum of two `usize`s
 #[inline(always)]
 const fn max(a: usize, b: usize) -> usize {
-    if a > b {
+    if likely(a >= b) {
         a
     } else {
         b
@@ -39,6 +49,13 @@ const fn max(a: usize, b: usize) -> usize {
 pub struct Layout(pub std::alloc::Layout);
 
 impl Layout {
+    /// Instance of [`LayoutErr`].
+    const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
+        // guarantee that the error is a unit type
+        Err(err) if size_of::<LayoutErr>() == 0 => err,
+        _ => unreachable!()
+    };
+
     /// Read [`std::alloc::Layout::from_size_align_unchecked`]
     #[inline]
     pub const unsafe fn from_size_align_unchecked(size: usize, align: usize) -> Self {
@@ -48,10 +65,17 @@ impl Layout {
     /// Read [`std::alloc::Layout::from_size_align`]
     #[inline]
     pub const fn from_size_align(size: usize, align: usize) -> Result<Self, LayoutErr> {
-        match Inner::from_size_align(size, align) {
-            Ok(inner) => Ok(Self(inner)),
-            Err(err) => Err(err)
+        // 0 is not a power of 2
+        if unlikely(!align.is_power_of_two()) {
+            return Err(Self::LAYOUT_ERR);
         }
+        // size_rounded_up = (size + align - 1) & !(align - 1);
+        if unlikely(size > usize::MAX - (align - 1)) {
+            return Err(Self::LAYOUT_ERR);
+        }
+
+        // SAFETY: checks above
+        Ok(unsafe { Self::from_size_align_unchecked(size, align) })
     }
 
     /// Read [`std::alloc::Layout::size`]
@@ -115,10 +139,6 @@ impl Layout {
     /// Read [`std::alloc::Layout::extend`]
     #[inline]
     pub const fn extend(&self, next: Self) -> Result<(Self, usize), LayoutErr> {
-        const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
-            Err(err) => err,
-            Ok(_) => unreachable!()
-        };
         debug_assert!(std::mem::size_of::<LayoutErr>() == 0);
 
         let new_align = max(self.align(), next.align());
@@ -126,13 +146,15 @@ impl Layout {
 
         let offset = match self.size().checked_add(pad) {
             Some(offset) => offset,
-            None => return Err(LAYOUT_ERR)
+            None => return Err(Self::LAYOUT_ERR)
         };
         let new_size = match offset.checked_add(next.size()) {
             Some(size) => size,
-            None => return Err(LAYOUT_ERR)
+            None => return Err(Self::LAYOUT_ERR)
         };
 
+        // SAFETY: Layout type contracts
+        unsafe { assume!(new_align.is_power_of_two()); }
         match Self::from_size_align(new_size, new_align) {
             Err(err) => Err(err),
             Ok(layout) => Ok((layout, offset))
@@ -147,6 +169,8 @@ impl Layout {
 
     /// Layout for an empty, zero-sized `#[repr(C)]` struct.
     ///
+    /// # Example
+    ///
     /// ```
     /// # use dsrs::mem::Layout;
     /// #[repr(C)]
@@ -160,13 +184,17 @@ impl Layout {
     };
 
     /// Repeatedly apply [`Layout::extend`].
+    ///
+    /// # Example
+    ///
+    ///
     #[inline]
     pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
         let mut offsets = [0; N];
         let mut layout = *self;
 
         let mut i = 0;
-        while i < N {
+        while likely(i < N) {
             let (new, offset) = match layout.extend(layouts[i]) {
                 Ok(data) => data,
                 Err(err) => return Err(err)
@@ -190,8 +218,8 @@ impl Layout {
     /// # Example
     ///
     /// ```
-    /// use dsrs::mem::Layout;
-    ///
+    /// # use dsrs::mem::Layout;
+    /// #
     /// #[repr(C)]
     /// struct Struct {
     ///     num: i32,
