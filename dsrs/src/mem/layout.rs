@@ -377,15 +377,15 @@ macro_rules! layout_repr_c {
     };
     // from array of `Sized` types
     ([$($field: ty),*]) => {
-        Layout::for_repr_c([$( Layout::new::<$field>(), )*])
+        $crate::mem::Layout::for_repr_c([$( $crate::mem::Layout::new::<$field>(), )*])
     };
     // only one unsized type
     ([$last: ty = $value: expr]) => {
-        Layout::for_repr_c([Layout::for_value::<$last>(&$value)])
+        $crate::mem::Layout::for_repr_c([$crate::mem::Layout::for_value::<$last>(&$value)])
     };
     // unsized struct, that is, struct with unsized last field
     ([$($field: ty),*; $last: ty = $value: expr]) => {
-        Layout::for_repr_c([$( Layout::new::<$field>(), )* Layout::for_value::<$last>(&$value)])
+        $crate::mem::Layout::for_repr_c([$( $crate::mem::Layout::new::<$field>(), )* $crate::mem::Layout::for_value::<$last>(&$value)])
     };
 }
 
@@ -504,5 +504,13 @@ mod tests {
         assert_eq!(Ok(Layout::new::<Struct>()), layout_repr_c!(layout [u32; u32 = 3]));
         assert_eq!(Ok([0]), layout_repr_c!(offsets [i32 = 2]));
         assert_eq!(Ok([0, 4]), layout_repr_c!(offsets [u32; u32 = 3]));
+    }
+}
+
+#[cfg(test)]
+mod test_no_import {
+    #[test]
+    fn only_macro_import() {
+        assert_eq!(crate::layout_repr_c!(offsets [u32, u32]), Ok([0, 4]))
     }
 }
