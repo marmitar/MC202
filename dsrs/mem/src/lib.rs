@@ -1,4 +1,6 @@
 #![feature(core_intrinsics)]
+#![feature(layout_for_ptr)]
+#![feature(alloc_layout_extra)]
 #![feature(const_fn)]
 #![feature(const_ptr_is_null)]
 #![feature(const_ptr_offset)]

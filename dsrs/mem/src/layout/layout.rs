@@ -248,3 +248,46 @@ impl Layout {
         self.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Guarantees that `Layout` method equivalence
+    #[test]
+    fn equivalent_methods() {
+        use std::alloc::Layout as Inner;
+
+        type T1 = ();
+        type T2 = String;
+        let layout1 = Layout::new::<T1>();
+        let layout2 = Layout::new::<T2>();
+
+        assert_eq!(layout1.inner(), Inner::new::<T1>());
+        assert_eq!(layout2.inner(), Inner::new::<T2>());
+
+        assert_eq!(Layout::from_size_align(10, 4), Inner::from_size_align(10, 4).map(Layout));
+        assert_eq!(Layout::from_size_align(13, 7), Inner::from_size_align(13, 7).map(Layout));
+        const MAX: usize = std::usize::MAX;
+        assert_eq!(Layout::from_size_align(MAX, 16), Inner::from_size_align(MAX, 16).map(Layout));
+
+        // SAFETY: Layout not used
+        unsafe { assert_eq!(Layout::from_size_align_unchecked(24, 8), Layout(Inner::from_size_align_unchecked(24, 8))); }
+
+        assert_eq!(layout1.align(), layout1.inner().align());
+        assert_eq!(layout2.size(), layout2.inner().size());
+
+        let val = "string";
+        assert_eq!(Layout::for_value(val), Layout(Inner::for_value(val)));
+        let ptr = val as *const str;
+        // SAFETY: `ptr` is a valid reference
+        unsafe { assert_eq!(Layout::for_value_raw(ptr), Layout(Inner::for_value_raw(ptr))); }
+
+        assert_eq!(layout2.padding_needed_for(256), layout2.inner().padding_needed_for(256));
+        assert_eq!(layout1.pad_to_align().inner(), layout1.inner().pad_to_align());
+
+        assert_eq!(layout1.extend(layout2), layout1.inner().extend(layout2.inner()).map(|(a, b)| (Layout(a), b)));
+        let overflow = Layout::from_size_align(MAX - 4, 2).unwrap();
+        assert_eq!(layout2.extend(overflow), layout2.inner().extend(overflow.inner()).map(|(a, b)| (Layout(a), b)));
+    }
+}
