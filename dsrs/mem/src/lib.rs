@@ -8,6 +8,8 @@
 #![feature(const_panic)]
 #![feature(const_likely)]
 #![feature(unsize)]
+#![feature(coerce_unsized)]
+#![feature(dispatch_from_dyn)]
 extern crate hint;
 
 pub mod ptr;

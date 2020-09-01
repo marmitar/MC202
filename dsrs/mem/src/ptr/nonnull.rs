@@ -1,6 +1,10 @@
 //! Pointers that can never be null.
 
 use std::fmt::{Debug, Pointer, Formatter, Result};
+use std::hash::{Hash, Hasher};
+use std::cmp::{Ord, PartialOrd, Ordering};
+use std::ops::{CoerceUnsized, DispatchFromDyn};
+use std::marker::Unsize;
 use hint::likely;
 
 
@@ -224,8 +228,8 @@ impl<T: ?Sized> NonNull<T> {
     /// let nonsized = NonNull::from(text);
     ///
     /// // SAFETY: `*mut str` is a fat pointer
-    /// let updated = unsafe { nonsized.update_metadata_unchecked(4) };
-    /// assert_eq!(Some(updated), nonsized.update_metadata(4));
+    /// let updated = unsafe { nonsized.update_metadata_unchecked(6) };
+    /// assert_eq!(Some(updated), nonsized.update_metadata(6));
     /// ```
     #[inline]
     pub const unsafe fn update_metadata_unchecked(self, metadata: usize) -> Self {
@@ -271,6 +275,44 @@ impl<T: ?Sized> Pointer for NonNull<T> {
     }
 }
 
+impl<T: ?Sized> Into<*mut T> for NonNull<T> {
+    #[inline]
+    fn into(self) -> *mut T {
+        self.as_ptr()
+    }
+}
+
+impl<T: ?Sized> Into<*const T> for NonNull<T> {
+    #[inline]
+    fn into(self) -> *const T {
+        self.as_ptr()
+    }
+}
+
+impl<T: ?Sized> Hash for NonNull<T> {
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_ptr().hash(state)
+    }
+}
+
+impl<T: ?Sized> Ord for NonNull<T> {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.as_ptr().cmp(&other.as_ptr())
+    }
+}
+
+impl<T: ?Sized> PartialOrd for NonNull<T> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_ptr().partial_cmp(&other.as_ptr())
+    }
+}
+
+impl<U: ?Sized, T: ?Sized + Unsize<U>> CoerceUnsized<NonNull<U>> for NonNull<T> {}
+
+impl<U: ?Sized, T: ?Sized + Unsize<U>> DispatchFromDyn<NonNull<U>> for NonNull<T> {}
 
 #[cfg(test)]
 mod tests {
