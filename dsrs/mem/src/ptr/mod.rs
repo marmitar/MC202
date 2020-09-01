@@ -1,6 +1,8 @@
 //! Raw pointer management.
+mod nonnull;
 
 use std::mem::size_of;
+pub use nonnull::NonNull;
 
 /// Size in bytes of a thin pointer, ie. for any `T: Sized` this is the size
 /// of a `*mut T`.
@@ -155,9 +157,26 @@ pub const fn update_data<T: ?Sized>(mut ptr: *mut T, new_data: *mut u8) -> *mut 
 /// Besides that, changing the metadata of any fat pointer could lead to wildly
 /// invalid references even when its type and metadata meaning are known.
 ///
-/// # Example
+/// # Examples
 ///
-/// Take a look at [`update_data`] for an example.
+/// ```
+/// use std::ptr;
+/// use mem::ptr::update_metadata;
+///
+/// let array = [1, 2, 3, 4];
+/// let ptr = &array[..1] as *const [i32];
+///
+/// // pointer with different metadata
+/// assert!(!ptr::eq(ptr, &array));
+///
+/// // safe update, since ptr is fat
+/// let ptr = unsafe { update_metadata(ptr as *mut [i32], array.len()) } as *const [i32];
+///
+/// // now they have the same metadata
+/// assert!(ptr::eq(ptr, &array))
+/// ```
+///
+/// Take a look at [`update_data`] for a more in-depth example.
 #[inline]
 pub const unsafe fn update_metadata<T: ?Sized>(mut ptr: *mut T, metadata: usize) -> *mut T {
     let data = &mut ptr as *mut *mut T as *mut *mut u8;
