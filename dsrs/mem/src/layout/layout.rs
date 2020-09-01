@@ -33,6 +33,8 @@ const fn max(a: usize, b: usize) -> usize {
     }
 }
 
+/// Checks if type with `size` will overflow when
+/// padded to `align`.
 #[inline(always)]
 const fn overflow_padded(size: usize, align: usize) -> bool {
     // From: std::alloc::Layout::from_size_align
@@ -214,8 +216,8 @@ impl Layout {
     /// }
     ///
     /// let fields = [Layout::new::<u32>(), Layout::new::<String>(), Layout::new::<f64>()];
-    /// let (layout, offsets) = Layout::EMPTY.extend_many(fields).unwrap();
-    /// let layout = layout.pad_to_align();
+    /// let (unpadded, offsets) = Layout::EMPTY.extend_many(fields).unwrap();
+    /// let layout = unpadded.pad_to_align();
     ///
     /// assert_eq!(layout, Layout::new::<CStruct>())
     /// ```
