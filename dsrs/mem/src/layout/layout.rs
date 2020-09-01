@@ -33,9 +33,28 @@ const fn max(a: usize, b: usize) -> usize {
     }
 }
 
+#[inline(always)]
+const fn overflow_padded(size: usize, align: usize) -> bool {
+    // From: std::alloc::Layout::from_size_align
+
+    // Rounded up size is:
+    //   size_rounded_up = (size + align - 1) & !(align - 1);
+    //
+    // We know from above that align != 0. If adding (align - 1)
+    // does not overflow, then rounding up will be fine.
+    //
+    // Conversely, &-masking with !(align - 1) will subtract off
+    // only low-order-bits. Thus if overflow occurs with the sum,
+    // the &-mask cannot subtract enough to undo that overflow.
+    //
+    // Above implies that checking for summation overflow is both
+    // necessary and sufficient.
+    size > usize::MAX - (align - 1)
+}
+
 /// Instance of [`LayoutErr`].
 const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
-    // guarantee that the error is a unit type
+    // check that the error is a unitary type
     Err(err) if size_of::<LayoutErr>() == 0 => err,
     _ => unreachable!()
 };
@@ -62,7 +81,7 @@ impl Layout {
             return Err(LAYOUT_ERR);
         }
         // size_rounded_up = (size + align - 1) & !(align - 1);
-        if hint::unlikely!(size > usize::MAX - (align - 1)) {
+        if hint::unlikely!(overflow_padded(size, align)) {
             return Err(LAYOUT_ERR);
         }
 
@@ -73,13 +92,17 @@ impl Layout {
     /// Read [`std::alloc::Layout::size`]
     #[inline]
     pub const fn size(&self) -> usize {
-        self.0.size()
+        let size = self.0.size();
+        unsafe { hint::assume!(!overflow_padded(size, self.align())); }
+        size
     }
 
     /// Read [`std::alloc::Layout::align`]
     #[inline]
     pub const fn align(&self) -> usize {
-        self.0.align()
+        let align = self.0.align();
+        unsafe { hint::assume!(align.is_power_of_two()) };
+        align
     }
 
     /// Read [`std::alloc::Layout::new`]
@@ -155,6 +178,66 @@ impl Layout {
     #[inline]
     pub const fn eq(&self, other: &Self) -> bool {
         self.size() == other.size() && self.align() == other.align()
+    }
+
+    /// Layout for an empty, zero-sized `#[repr(C)]` struct.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use mem::layout::Layout;
+    /// #[repr(C)]
+    /// struct Empty {}
+    ///
+    /// assert_eq!(Layout::EMPTY, Layout::new::<Empty>());
+    /// ```
+    pub const EMPTY: Layout = match Layout::from_size_align(0, 1) {
+        // check that the empty layout doesn't need padding
+        Ok(layout) if layout.eq(&layout.pad_to_align()) => layout,
+        _ => unreachable!()
+    };
+
+    /// Repeatedly apply [`Layout::extend`].
+    ///
+    /// # Example
+    ///
+    /// The layout of a `#[repr(C)]` struct:
+    ///
+    /// ```
+    /// use mem::layout::Layout;
+    ///
+    /// #[repr(C)]
+    /// struct CStruct {
+    ///     id: u32,
+    ///     name: String,
+    ///     rank: f64
+    /// }
+    ///
+    /// let fields = [Layout::new::<u32>(), Layout::new::<String>(), Layout::new::<f64>()];
+    /// let (layout, offsets) = Layout::EMPTY.extend_many(fields).unwrap();
+    /// let layout = layout.pad_to_align();
+    ///
+    /// assert_eq!(layout, Layout::new::<CStruct>())
+    /// ```
+    #[inline]
+    pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
+        let mut offsets = [0; N];
+        let mut layout = *self;
+
+        let mut i = 0;
+        while hint::likely!(i < N) {
+            let (new, offset) = match layout.extend(layouts[i]) {
+                Ok(data) => data,
+                Err(err) => return Err(err)
+            };
+
+            offsets[i] = offset;
+            layout = new;
+
+            i += 1;
+        }
+
+        Ok((layout, offsets))
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.

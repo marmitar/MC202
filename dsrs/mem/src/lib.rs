@@ -11,6 +11,7 @@
 #![feature(const_result)]
 #![feature(const_panic)]
 #![feature(const_likely)]
+#![feature(const_generics)]
 #![feature(unsize)]
 #![feature(coerce_unsized)]
 #![feature(dispatch_from_dyn)]
