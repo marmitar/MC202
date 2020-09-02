@@ -52,7 +52,7 @@ const fn overflow_padded(size: usize, align: usize) -> bool {
     //
     // Above implies that checking for summation overflow is both
     // necessary and sufficient.
-    size > usize::MAX - (align - 1)
+    size > usize::MAX - align.wrapping_sub(1)
 }
 
 /// Instance of [`LayoutErr`].
@@ -241,6 +241,31 @@ impl Layout {
         }
 
         Ok((layout, offsets))
+    }
+
+    /// Checks that a pointer is aligned for this layout.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use mem::layout::Layout;
+    ///
+    /// let text = "some string";
+    /// let layout = Layout::for_value(text);
+    ///
+    /// assert!(layout.is_aligned(text as *const str))
+    /// ```
+    #[inline(always)]
+    pub fn is_aligned<T: ?Sized>(&self, ptr: *const T) -> bool {
+        // type requirement
+        debug_assert!(self.align().is_power_of_two());
+
+        let addr = ptr as *const u8 as usize;
+        // bitmask to get the first bits which are the remainder
+        // dividing by align, given that align is a power of two
+        let mask = self.align().wrapping_sub(1);
+        // same as: addr % align == 0
+        (addr & mask) == 0
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.
