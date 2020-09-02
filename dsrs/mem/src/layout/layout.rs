@@ -93,7 +93,7 @@ impl Layout {
     }
 
     /// Read [`std::alloc::Layout::size`]
-    #[inline]
+    #[inline(always)]
     pub const fn size(&self) -> usize {
         let size = self.0.size();
         unsafe { hint::assume!(!overflow_padded(size, self.align())); }
@@ -101,7 +101,7 @@ impl Layout {
     }
 
     /// Read [`std::alloc::Layout::align`]
-    #[inline]
+    #[inline(always)]
     pub const fn align(&self) -> usize {
         let align = self.0.align();
         unsafe { hint::assume!(align.is_power_of_two()) };
@@ -178,7 +178,7 @@ impl Layout {
     }
 
     /// Const version of [`PartialEq::eq`].
-    #[inline]
+    #[inline(always)]
     pub const fn eq(&self, other: &Self) -> bool {
         self.size() == other.size() && self.align() == other.align()
     }
