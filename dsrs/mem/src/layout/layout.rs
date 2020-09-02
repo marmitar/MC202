@@ -256,11 +256,13 @@ impl Layout {
     /// assert!(layout.is_aligned(text as *const str))
     /// ```
     #[inline(always)]
-    pub fn is_aligned<T: ?Sized>(&self, ptr: *const T) -> bool {
+    pub const fn is_aligned<T: ?Sized>(&self, ptr: *const T) -> bool {
         // type requirement
         debug_assert!(self.align().is_power_of_two());
 
-        let addr = ptr as *const u8 as usize;
+        // SAFETY: every pointer generated at const context
+        // should mantain alignment information, inclusive at runtime
+        let addr = unsafe { ptr as *const u8 as usize };
         // bitmask to get the first bits which are the remainder
         // dividing by align, given that align is a power of two
         let mask = self.align().wrapping_sub(1);
