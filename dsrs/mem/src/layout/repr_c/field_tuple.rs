@@ -37,11 +37,17 @@ pub unsafe trait FieldTuple {
     /// Layout for its [`FieldTuple::Start`].
     const START_LAYOUT: Layout;
 
-    /// Overwrites memory location with the starting fields of `#[repr(C)]` struct.
+    /// Overwrites memory location with the starting fields of a `#[repr(C)]` struct.
     ///
-    /// This functions write at right offsets, following required alignment.
+    /// This functions writes at right offsets, following required alignment.
     /// The values at `start` tuple are not dropped.
     unsafe fn write_start(ptr: *mut u8, start: Self::Start) -> Result<()>;
+
+    /// Reads contents of memory location with the starting fields of a `#[repr(C)]` struct.
+    ///
+    /// This read at right offsets, following required alignment.
+    /// The values at `start` tuple are considered owned now.
+    unsafe fn read_start(ptr: *const u8) -> Result<Self::Start>;
 
     #[inline]
     /// Write the last field of an equivalent `#[repr(C)]` struct at the right offset.
@@ -60,12 +66,25 @@ pub unsafe trait FieldTuple {
         std::ptr::copy(last as *const u8, data_ptr, layout.size());
         Ok(())
     }
+
+    #[inline]
+    /// Read the last field of an equivalent `#[repr(C)]` struct at the right offset.
+    ///
+    /// Memory may overlap.
+    unsafe fn read_last(ptr: *const u8, last: *mut Self::Last) -> Result<()> {
+        // get offset and layout for last field
+        let (_, offset, layout) = layout_with_last_field::<Self>(last)?;
+
+        // pointer to last field in struct
+        let data_ptr = ptr.offset(offset);
+        // must be aligned to `Self::Last`
+        debug_assert!(layout.is_aligned(data_ptr) && layout.is_aligned(last));
+
+        // copy the last field, which may overlap
+        std::ptr::copy(data_ptr, last as *mut u8, layout.size());
+        Ok(())
+    }
 }
-
-// assert field tuple methods
-
-
-
 
 /// Count identifiers.
 macro_rules! count {
@@ -107,9 +126,22 @@ macro_rules! impl_field_tuple {
                 Ok(())
             }
 
+            #[inline]
+            unsafe fn read_start(ptr: *const u8) -> Result<()> {
+                // just to check alignment
+                std::ptr::read(ptr as *const ());
+                Ok(())
+            }
+
             /// Should never be called, as never type should not exists.
             #[inline]
             unsafe fn write_last(_: *mut u8, _: *const !) -> Result<()> {
+                panic!("pointer to never type")
+            }
+
+            /// Should never be called, as never type should not exists.
+            #[inline]
+            unsafe fn read_last(_: *const u8, _: *mut !) -> Result<()> {
                 panic!("pointer to never type")
             }
         }
@@ -143,6 +175,29 @@ macro_rules! impl_field_tuple {
                 )*
 
                 Ok(())
+            }
+
+            #[inline]
+            unsafe fn read_start(ptr: *const u8) -> Result<($($type,)*)> {
+                // just to check alignment
+                std::ptr::read(ptr as *const ());
+
+                #[allow(unused_mut, unused)]
+                let mut layout = Layout::EMPTY;
+                $(
+                        // calculates the field offset while extending the layout
+                        let (new_layout, offset) = layout.extend(Layout::new::<$type>())?;
+                        // adjust pointer to field position
+                        let data_ptr = ptr.offset(offset as isize) as *mut $type;
+                        // write field
+                        let $name = std::ptr::read(data_ptr);
+
+                        #[allow(unused_assignments)]
+                        // update layout
+                        layout = new_layout;
+                )*
+
+                Ok(($($name,)*))
             }
         }
     }
