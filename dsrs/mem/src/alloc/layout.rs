@@ -1,9 +1,12 @@
-//! Data in memory layout.
+//! Data in memory layout of objects.
 
 use std::alloc::Layout as Inner;
 use std::mem::{size_of, align_of};
-use super::{LayoutErr, Result};
+pub use std::alloc::LayoutErr;
 
+/// Specialized [`Result`](std::result::Result) for
+/// [`Layout`] operations.
+pub type Result<T> = std::result::Result<T, LayoutErr>;
 
 /// Get `(size, align)` for [`Sized`] types.
 #[inline(always)]

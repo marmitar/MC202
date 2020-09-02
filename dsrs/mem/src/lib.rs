@@ -1,3 +1,4 @@
+#![feature(unsafe_block_in_unsafe_fn)]
 #![feature(core_intrinsics)]
 #![feature(layout_for_ptr)]
 #![feature(alloc_layout_extra)]
@@ -19,7 +20,9 @@
 #![feature(never_type)]
 #![feature(stmt_expr_attributes)]
 #![feature(dispatch_from_dyn)]
+#![feature(allocator_api)]
+#![allow(unsafe_op_in_unsafe_fn)]
 extern crate hint;
 
 pub mod ptr;
-pub mod layout;
+pub mod alloc;
