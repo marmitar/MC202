@@ -70,13 +70,19 @@ const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
 pub struct Layout(pub std::alloc::Layout);
 
 impl Layout {
-    /// Read [`std::alloc::Layout::from_size_align_unchecked`]
-    #[inline]
-    pub const unsafe fn from_size_align_unchecked(size: usize, align: usize) -> Self {
-        Self(Inner::from_size_align_unchecked(size, align))
-    }
-
-    /// Read [`std::alloc::Layout::from_size_align`]
+    /// Constructs a `Layout` from a given `size` and `align`,
+    /// or returns `LayoutErr` if any of the following conditions
+    /// are not met:
+    ///
+    /// * `align` must not be zero,
+    ///
+    /// * `align` must be a power of two,
+    ///
+    /// * `size`, when rounded up to the nearest multiple of `align`,
+    ///    must not overflow (i.e., the rounded value must be less than
+    ///    or equal to `usize::MAX`).
+    ///
+    /// See [`std::alloc::Layout::from_size_align`].
     #[inline]
     pub const fn from_size_align(size: usize, align: usize) -> Result<Self> {
         // 0 is not a power of 2
@@ -92,7 +98,22 @@ impl Layout {
         Ok(unsafe { Self::from_size_align_unchecked(size, align) })
     }
 
-    /// Read [`std::alloc::Layout::size`]
+    /// Creates a layout, bypassing all checks.
+    ///
+    /// See [`std::alloc::Layout::from_size_align_unchecked`].
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe as it does not verify the preconditions from
+    /// [`Layout::from_size_align`].
+    #[inline]
+    pub const unsafe fn from_size_align_unchecked(size: usize, align: usize) -> Self {
+        Self(Inner::from_size_align_unchecked(size, align))
+    }
+
+    /// The minimum size in bytes for a memory block of this layout.
+    ///
+    /// See [`std::alloc::Layout::size`].
     #[inline(always)]
     pub const fn size(&self) -> usize {
         let size = self.0.size();
@@ -100,7 +121,9 @@ impl Layout {
         size
     }
 
-    /// Read [`std::alloc::Layout::align`]
+    /// The minimum byte alignment for a memory block of this layout.
+    ///
+    /// See [`std::alloc::Layout::align`].
     #[inline(always)]
     pub const fn align(&self) -> usize {
         let align = self.0.align();
@@ -108,7 +131,9 @@ impl Layout {
         align
     }
 
-    /// Read [`std::alloc::Layout::new`]
+    /// Constructs a `Layout` suitable for holding a value of type `T`.
+    ///
+    /// See [`std::alloc::Layout::new`].
     #[inline]
     pub const fn new<T>() -> Self {
         let (size, align) = size_align::<T>();
@@ -116,16 +141,43 @@ impl Layout {
         unsafe { Self::from_size_align_unchecked(size, align) }
     }
 
-    /// Read [`std::alloc::Layout::for_value`]
+    /// Produces layout describing a record that could be used to
+    /// allocate backing structure for `T` (which could be a trait
+    /// or other unsized type like a slice).
+    ///
+    /// See [`std::alloc::Layout::for_value`].
     #[inline]
     pub const fn for_value<T: ?Sized>(val: &T) -> Self {
         let (size, align) = size_align_val(val);
         debug_assert!(Self::from_size_align(size, align).is_ok());
-        // SAFETY: rust types garantees
+        // SAFETY: rust types guarantees
         unsafe { Self::from_size_align_unchecked(size, align) }
     }
 
-    /// Read [`std::alloc::Layout::for_value_raw`]
+    /// Produces layout describing a record that could be used to
+    /// allocate backing structure for `T` (which could be a trait
+    /// or other unsized type like a slice).
+    ///
+    /// # Safety
+    ///
+    /// This function is only safe to call if the following conditions hold:
+    ///
+    /// - If `T` is `Sized`, this function is always safe to call.
+    /// - If the unsized tail of `T` is:
+    ///     - a [slice](slice), then the length of the slice tail must be an intialized
+    ///       integer, and the size of the *entire value*
+    ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+    ///     - a *trait object*, then the vtable part of the pointer must point
+    ///       to a valid vtable for the type `T` acquired by an unsizing coersion,
+    ///       and the size of the *entire value*
+    ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+    ///     - an (unstable) extern type, then this function is always safe to
+    ///       call, but may panic or otherwise return the wrong value, as the
+    ///       extern type's layout is not known. This is the same behavior as
+    ///       [`Layout::for_value`] on a reference to an extern type tail.
+    ///     - otherwise, it is conservatively not allowed to call this function.
+    ///
+    /// See [`std::alloc::Layout::for_value_raw`].
     #[inline]
     pub const unsafe fn for_value_raw<T: ?Sized>(val: *const T) -> Self {
         let (size, align) = size_align_val_raw(val);
@@ -133,7 +185,11 @@ impl Layout {
         Self::from_size_align_unchecked(size, align)
     }
 
-    /// Read [`std::alloc::Layout::padding_needed_for`]
+    /// Returns the amount of padding we must insert after `self`
+    /// to ensure that the following address will satisfy `align`
+    /// (measured in bytes).
+    ///
+    /// See [`std::alloc::Layout::padding_needed_for`].
     #[inline]
     pub const fn padding_needed_for(&self, align: usize) -> usize {
         let len = self.size();
@@ -143,7 +199,10 @@ impl Layout {
         len_rounded_up.wrapping_sub(len)
     }
 
-    /// Read [`std::alloc::Layout::pad_to_align`]
+    /// Creates a layout by rounding the size of this layout up to a multiple
+    /// of the layout's alignment.
+    ///
+    /// See [`std::alloc::Layout::pad_to_align`].
     #[inline]
     pub const fn pad_to_align(&self) -> Self {
         let pad = self.padding_needed_for(self.align());
@@ -154,7 +213,11 @@ impl Layout {
         unsafe { Self::from_size_align_unchecked(new_size, self.align()) }
     }
 
-    /// Read [`std::alloc::Layout::extend`]
+    /// Creates a layout describing the record for `self` followed by
+    /// `next`, including any necessary padding to ensure that `next`
+    /// will be properly aligned, but *no trailing padding*.
+    ///
+    /// See [`std::alloc::Layout::extend`].
     #[inline]
     pub const fn extend(&self, next: Self) -> Result<(Self, usize)> {
         let new_align = max(self.align(), next.align());

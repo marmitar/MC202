@@ -17,13 +17,22 @@ pub struct NonNull<T: ?Sized>(pub std::ptr::NonNull<T>);
 
 
 impl<T: ?Sized> NonNull<T> {
-    /// Read [`std::ptr::NonNull::new_unchecked`]
+    /// Creates a new `NonNull`.
+    ///
+    /// See [`std::ptr::NonNull::new_unchecked`].
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be non-null.
     #[inline]
     pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
         Self(std::ptr::NonNull::new_unchecked(ptr))
     }
 
-    /// Read [`std::ptr::NonNull::new`]
+    /// Creates a new `NonNull` if `ptr` is non-null.
+    ///
+    /// See [`std::ptr::NonNull::new`]
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     #[inline]
     pub const fn new(ptr: *mut T) -> Option<Self> {
         if likely!(!ptr.is_null()) {
@@ -34,25 +43,75 @@ impl<T: ?Sized> NonNull<T> {
         }
     }
 
-    /// Read [`std::ptr::NonNull::as_ptr`]
+    /// Acquires the underlying `*mut` pointer.
+    ///
+    /// See [`std::ptr::NonNull::as_ptr`].
     #[inline]
     pub const fn as_ptr(self) -> *mut T {
         self.0.as_ptr()
     }
 
-    /// Read [`std::ptr::NonNull::as_ref`]
+    /// Returns a shared reference to the value. If the value may be uninitialized, [`as_uninit_ref`]
+    /// must be used instead.
+    ///
+    /// For the mutable counterpart see [`as_mut`].
+    ///
+    /// [`as_uninit_ref`]: #method.as_uninit_ref
+    /// [`as_mut`]: #method.as_mut
+    ///
+    /// # Safety
+    ///
+    /// When calling this method, you have to ensure that all of the following is true:
+    ///
+    /// * The pointer must be properly aligned.
+    ///
+    /// * It must be "dereferencable".
+    ///
+    /// * The pointer must point to an initialized instance of `T`.
+    ///
+    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+    ///
+    /// This applies even if the result of this method is unused!
+    ///
+    /// See [`std::ptr::NonNull::as_ref`].
     #[inline]
     pub const unsafe fn as_ref(&self) -> &T {
         &*(self.0.as_ptr() as *const T)
     }
 
-    /// Read [`std::ptr::NonNull::as_mut`]
+    /// Returns a unique reference to the value. If the value may be uninitialized, [`as_uninit_mut`]
+    /// must be used instead.
+    ///
+    /// For the shared counterpart see [`as_ref`].
+    ///
+    /// [`as_uninit_mut`]: #method.as_uninit_mut
+    /// [`as_ref`]: #method.as_ref
+    ///
+    /// # Safety
+    ///
+    /// When calling this method, you have to ensure that all of the following is true:
+    ///
+    /// * The pointer must be properly aligned.
+    ///
+    /// * It must be "dereferencable".
+    ///
+    /// * The pointer must point to an initialized instance of `T`.
+    ///
+    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
+    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data..
+    ///
+    /// This applies even if the result of this method is unused!
+    ///
+    /// See [`std::ptr::NonNull::as_mut`].
     #[inline]
     pub const unsafe fn as_mut(&mut self) -> &mut T {
         &mut *self.0.as_ptr()
     }
 
-    /// Read [`std::ptr::NonNull::cast`]
+    /// Casts to a pointer of another type.
+    ///
+    /// See [`std::ptr::NonNull::cast`].
     #[inline]
     pub const fn cast<U>(self) -> NonNull<U> {
         NonNull(self.0.cast())
