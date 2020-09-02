@@ -27,7 +27,7 @@ use super::{Layout, Result};
 /// This will error if an arithmetic overflow happens or if the layout would
 /// overflow when padding.
 #[inline]
-pub(super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: *const T::Last) -> Result<(Layout, usize, Layout)> {
+pub (super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: *const T::Last) -> Result<(Layout, usize, Layout)> {
     // SAFETY: the caller must upheld restriction
     let last_layout = unsafe { Layout::for_value_raw(val) };
 

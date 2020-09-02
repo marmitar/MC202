@@ -4,6 +4,7 @@ use std::fmt::{Debug, Pointer, Formatter, Result};
 use std::hash::{Hash, Hasher};
 use std::cmp::{Ord, PartialOrd, Ordering};
 use std::ops::{CoerceUnsized, DispatchFromDyn};
+use std::mem::MaybeUninit;
 use std::marker::Unsize;
 use hint::likely;
 
@@ -14,7 +15,7 @@ use hint::likely;
 /// [`as_mut`](NonNull::as_mut) as `const`, along with a few
 /// other methods.
 #[repr(transparent)]
-pub struct NonNull<T: ?Sized>(pub std::ptr::NonNull<T>);
+pub struct NonNull<T: ?Sized>(pub (crate) std::ptr::NonNull<T>);
 
 
 impl<T: ?Sized> NonNull<T> {
@@ -54,11 +55,9 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Returns a shared reference to the value. If the value may be uninitialized,
-    /// [`as_uninit_ref`] must be used instead.
+    /// [`as_uninit_ref`](NonNull::as_uninit_ref) must be used instead.
     ///
     /// For the mutable counterpart see [`as_mut`](NonNull::as_mut).
-    ///
-    /// [`as_uninit_ref`]: #method.as_uninit_ref
     ///
     /// # Safety
     ///
@@ -84,7 +83,7 @@ impl<T: ?Sized> NonNull<T> {
     }
 
     /// Returns a unique reference to the value. If the value may be uninitialized,
-    /// [`as_uninit_mut`](NonNull::as_init_mut) must be used instead.
+    /// [`as_uninit_mut`](NonNull::as_uninit_mut) must be used instead.
     ///
     /// For the shared counterpart see [`as_ref`](NonNull::as_ref).
     ///
@@ -298,6 +297,54 @@ impl<T: ?Sized> NonNull<T> {
         let ptr = unsafe { super::update_metadata(self.as_ptr(), metadata) };
         // SAFETY: self still is not null
         unsafe { NonNull::new_unchecked(ptr) }
+    }
+}
+
+impl<T> NonNull<T> {
+    /// Creates a new `NonNull` that is dangling, but well-aligned.
+    ///
+    /// See [`std::ptr::NonNull::dangling`].
+    #[inline]
+    pub const fn dangling() -> Self {
+        Self(std::ptr::NonNull::dangling())
+    }
+
+    /// Returns a shared references to the value. In contrast to [`as_ref`](NonNull::as_ref),
+    /// this does not require that the value has to be initialized.
+    ///
+    /// # Safety
+    ///
+    /// The pointer must still be:
+    ///
+    /// * Aligned to `T`.
+    ///
+    /// * Dereferenceable.
+    ///
+    /// * Correctly aliased.
+    ///
+    /// See [`std::ptr::NonNull::as_ref`]
+    #[inline]
+    pub const unsafe fn as_uninit_ref(&self) -> &MaybeUninit<T> {
+        unsafe { &*self.cast().as_ptr() }
+    }
+
+    /// Returns a unique references to the value. In contrast to [`as_mut`](NonNull::as_mut),
+    /// this does not require that the value has to be initialized.
+    ///
+    /// # Safety
+    ///
+    /// The pointer must still be:
+    ///
+    /// * Aligned to `T`.
+    ///
+    /// * Dereferenceable.
+    ///
+    /// * Correctly aliased.
+    ///
+    /// See [`std::ptr::NonNull::as_mut`]
+    #[inline]
+    pub const unsafe fn as_uninit_mut(&mut self) -> &mut MaybeUninit<T> {
+        unsafe { &mut *self.cast().as_ptr() }
     }
 }
 

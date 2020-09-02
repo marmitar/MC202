@@ -3,6 +3,7 @@
 use std::alloc::Layout as Inner;
 use std::mem::{size_of, align_of};
 pub use std::alloc::LayoutErr;
+use crate::ptr::NonNull;
 
 /// Specialized [`Result`](std::result::Result) for
 /// [`Layout`] operations.
@@ -81,7 +82,7 @@ const fn overflow_padded(size: usize, align: usize) -> bool {
 }
 
 /// Instance of [`LayoutErr`].
-pub (super) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
+pub (crate) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
     // check that the error is a unitary type
     Err(err) if size_of::<LayoutErr>() == 0 => err,
     _ => unreachable!()
@@ -99,7 +100,7 @@ pub (super) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
 /// methods `const`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(transparent)]
-pub struct Layout(pub std::alloc::Layout);
+pub struct Layout(pub (crate) std::alloc::Layout);
 
 impl Layout {
     /// Constructs a `Layout` from a given `size` and `align`,
@@ -166,6 +167,19 @@ impl Layout {
         unsafe { hint::assume!(align.is_power_of_two()) };
         // this hint is for inlining
         align
+    }
+
+    /// Creates a `NonNull` that is dangling, but well-aligned for this Layout.
+    ///
+    /// Note that the pointer value may potentially represent a valid pointer,
+    /// which means this must not be used as a "not yet initialized"
+    /// sentinel value. Types that lazily allocate must track initialization by
+    /// some other means.
+    ///
+    /// See [`std::alloc::Layout::dangling`].
+    #[inline]
+    pub const fn dangling(&self) -> NonNull<u8> {
+        NonNull(self.0.dangling())
     }
 
     /// Constructs a `Layout` suitable for holding a value of type `T`.
