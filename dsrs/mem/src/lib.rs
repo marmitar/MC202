@@ -21,7 +21,7 @@
 #![feature(stmt_expr_attributes)]
 #![feature(dispatch_from_dyn)]
 #![feature(allocator_api)]
-#![allow(unsafe_op_in_unsafe_fn)]
+#![deny(unsafe_op_in_unsafe_fn)]
 extern crate hint;
 
 pub mod ptr;

@@ -41,7 +41,8 @@ impl<T: ?Sized> NonNull<T> {
     /// `ptr` must be non-null.
     #[inline]
     pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
-        Self(std::ptr::NonNull::new_unchecked(ptr))
+        // SAFETY: the caller must guarantee that `ptr` is non-null.
+        Self(unsafe { std::ptr::NonNull::new_unchecked(ptr) })
     }
 
     /// Acquires the underlying `*mut` pointer.
@@ -77,7 +78,9 @@ impl<T: ?Sized> NonNull<T> {
     /// See [`std::ptr::NonNull::as_ref`].
     #[inline]
     pub const unsafe fn as_ref(&self) -> &T {
-        &*(self.0.as_ptr() as *const T)
+        // SAFETY: the caller must guarantee that
+        // this is a valid reference.
+        unsafe { &*self.0.as_ptr() }
     }
 
     /// Returns a unique reference to the value. If the value may be uninitialized,
@@ -103,7 +106,9 @@ impl<T: ?Sized> NonNull<T> {
     /// See [`std::ptr::NonNull::as_mut`].
     #[inline]
     pub const unsafe fn as_mut(&mut self) -> &mut T {
-        &mut *self.0.as_ptr()
+        // SAFETY: the caller must guarantee that
+        // this is a valid mutable reference.
+        unsafe { &mut *self.0.as_ptr() }
     }
 
     /// Casts to a pointer of another type.
@@ -290,9 +295,9 @@ impl<T: ?Sized> NonNull<T> {
     #[inline]
     pub const unsafe fn update_metadata_unchecked(self, metadata: usize) -> Self {
         // SAFETY: caller must ensure ptr is fat
-        let ptr = super::update_metadata(self.as_ptr(), metadata);
-        // SAFETY: self is not null
-        NonNull::new_unchecked(ptr)
+        let ptr = unsafe { super::update_metadata(self.as_ptr(), metadata) };
+        // SAFETY: self still is not null
+        unsafe { NonNull::new_unchecked(ptr) }
     }
 }
 

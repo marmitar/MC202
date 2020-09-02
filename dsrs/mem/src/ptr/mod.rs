@@ -180,7 +180,10 @@ pub const fn update_data<T: ?Sized>(mut ptr: *mut T, new_data: *mut u8) -> *mut 
 #[inline]
 pub const unsafe fn update_metadata<T: ?Sized>(mut ptr: *mut T, metadata: usize) -> *mut T {
     let data = &mut ptr as *mut *mut T as *mut *mut u8;
-    let meta = data.offset(1) as *mut usize;
-    *meta = metadata;
+    unsafe {
+        // SAFETY: if *mut T is a fat pointer, there will always be a metadata ahead of it
+        let meta = data.add(1) as *mut usize;
+        *meta = metadata;
+    }
     ptr
 }

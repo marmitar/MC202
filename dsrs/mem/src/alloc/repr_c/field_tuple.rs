@@ -1,5 +1,4 @@
 //! Associated types for the fields in a `#[repr(C)]` struct.
-#![deny(unsafe_op_in_unsafe_fn)]
 use super::{Layout, Result};
 
 /// Build the layout for the equivalent `#[repr(C)]` struct.

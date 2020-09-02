@@ -45,7 +45,8 @@ const fn size_align_val<T: ?Sized>(val: &T) -> (usize, usize) {
 /// See [`std::mem::size_of_val_raw`] and [`std::mem::align_of_val_raw`].
 #[inline(always)]
 const unsafe fn size_align_val_raw<T: ?Sized>(ptr: *const T) -> (usize, usize) {
-    size_align_val(&*ptr)
+    use std::intrinsics::{size_of_val, min_align_of_val};
+    (size_of_val(ptr), min_align_of_val(ptr))
 }
 
 /// Maximum of two `usize`s.
@@ -139,7 +140,8 @@ impl Layout {
     /// [`Layout::from_size_align`].
     #[inline]
     pub const unsafe fn from_size_align_unchecked(size: usize, align: usize) -> Self {
-        Self(Inner::from_size_align_unchecked(size, align))
+        // SAFETY: the caller must guarantee a valid layout
+        Self(unsafe { Inner::from_size_align_unchecked(size, align) })
     }
 
     /// The minimum size in bytes for a memory block of this layout.
@@ -148,7 +150,9 @@ impl Layout {
     #[inline(always)]
     pub const fn size(&self) -> usize {
         let size = self.0.size();
+        // SAFTEY: a valid layout will never overflow when padded
         unsafe { hint::assume!(!overflow_padded(size, self.align())); }
+        // this hint is for inlining
         size
     }
 
@@ -158,7 +162,9 @@ impl Layout {
     #[inline(always)]
     pub const fn align(&self) -> usize {
         let align = self.0.align();
+        // SAFTEY: a valid has layout as a power of two
         unsafe { hint::assume!(align.is_power_of_two()) };
+        // this hint is for inlining
         align
     }
 
@@ -168,7 +174,7 @@ impl Layout {
     #[inline]
     pub const fn new<T>() -> Self {
         let (size, align) = size_align::<T>();
-        // SAFETY: rust types garantees
+        // SAFETY: rust types garantees a valid layout
         unsafe { Self::from_size_align_unchecked(size, align) }
     }
 
@@ -181,7 +187,7 @@ impl Layout {
     pub const fn for_value<T: ?Sized>(val: &T) -> Self {
         let (size, align) = size_align_val(val);
         debug_assert!(Self::from_size_align(size, align).is_ok());
-        // SAFETY: rust types guarantees
+        // SAFETY: rust types garantees a valid layout
         unsafe { Self::from_size_align_unchecked(size, align) }
     }
 
@@ -211,9 +217,11 @@ impl Layout {
     /// See [`std::alloc::Layout::for_value_raw`].
     #[inline]
     pub const unsafe fn for_value_raw<T: ?Sized>(val: *const T) -> Self {
-        let (size, align) = size_align_val_raw(val);
+        // SAFETY: caller guarantees valid type
+        let (size, align) = unsafe { size_align_val_raw(val) };
         debug_assert!(Self::from_size_align(size, align).is_ok());
-        Self::from_size_align_unchecked(size, align)
+        // SAFETY: given that the type is valid, tust guarantees a valid layout
+        unsafe { Self::from_size_align_unchecked(size, align) }
     }
 
     /// Returns the amount of padding we must insert after `self`
@@ -224,9 +232,11 @@ impl Layout {
     #[inline]
     pub const fn padding_needed_for(&self, align: usize) -> usize {
         let len = self.size();
-        // SAFETY: `Layout` type guarantees
+        // same as: ceil(len / align) * align
+        // SAFETY: layout guarantess that size cannot overflow when padded
         let len_rounded_up = len.wrapping_add(align).wrapping_sub(1) & !align.wrapping_sub(1);
 
+        // SAFETY: size when padded >= size
         len_rounded_up.wrapping_sub(len)
     }
 
@@ -237,8 +247,8 @@ impl Layout {
     #[inline]
     pub const fn pad_to_align(&self) -> Self {
         let pad = self.padding_needed_for(self.align());
-        // SAFETY: cannot overflow
-        let new_size = self.size() + pad;
+        // SAFETY: layout guarantess that size cannot overflow when padded
+        let new_size = self.size().wrapping_add(pad);
 
         // SAFETY: guaranteed by `padding_needed_for`
         unsafe { Self::from_size_align_unchecked(new_size, self.align()) }
