@@ -22,6 +22,8 @@ const fn size_align_val<T: ?Sized>(val: &T) -> (usize, usize) {
 }
 
 /// Get `(size, align)` from raw pointer.
+///
+///
 #[inline(always)]
 const unsafe fn size_align_val_raw<T: ?Sized>(ptr: *const T) -> (usize, usize) {
     size_align_val(&*ptr)
@@ -65,9 +67,16 @@ const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
     _ => unreachable!()
 };
 
-/// Wrapper for [`std::alloc::Layout`].
+
+/// Layout of a block of memory.
 ///
-/// This wrapper makes most methods `const`.
+/// An instance of `Layout` describes a particular layout of memory.
+/// You build a `Layout` up as an input to give to an allocator.
+///
+/// All layouts have an associated size and a power-of-two alignment.
+///
+/// This is a wrapper for [`std::alloc::Layout`], making most
+/// methods `const`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Layout(pub std::alloc::Layout);
@@ -167,8 +176,8 @@ impl Layout {
     ///
     /// - If `T` is `Sized`, this function is always safe to call.
     /// - If the unsized tail of `T` is:
-    ///     - a [slice](std::slice), then the length of the slice tail must be an intialized
-    ///       integer, and the size of the *entire value*
+    ///     - a [slice](std::slice), then the length of the slice tail must be an
+    ///       intialized integer, and the size of the *entire value*
     ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
     ///     - a *trait object*, then the vtable part of the pointer must point
     ///       to a valid vtable for the type `T` acquired by an unsizing coersion,

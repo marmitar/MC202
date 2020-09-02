@@ -7,11 +7,12 @@ use std::ops::{CoerceUnsized, DispatchFromDyn};
 use std::marker::Unsize;
 use hint::likely;
 
-
-/// Wrapper for [`std::ptr::NonNull`].
+/// `*mut T` but non-zero and covariant.
 ///
-/// This wrapper makes [`from`](NonNull::from), [`as_ref`](NonNull::as_ref)
-/// and [`as_mut`](NonNull::as_mut) as `const`.
+/// This is a wrapper for [`std::ptr::NonNull`], which makes
+/// [`from`](NonNull::from), [`as_ref`](NonNull::as_ref) and
+/// [`as_mut`](NonNull::as_mut) as `const`, along with a few
+/// other methods.
 #[repr(transparent)]
 pub struct NonNull<T: ?Sized>(pub std::ptr::NonNull<T>);
 
