@@ -16,6 +16,8 @@
 #![feature(const_generics)]
 #![feature(unsize)]
 #![feature(coerce_unsized)]
+#![feature(never_type)]
+#![feature(stmt_expr_attributes)]
 #![feature(dispatch_from_dyn)]
 extern crate hint;
 
