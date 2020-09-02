@@ -164,7 +164,7 @@ impl Layout {
     ///
     /// - If `T` is `Sized`, this function is always safe to call.
     /// - If the unsized tail of `T` is:
-    ///     - a [slice](slice), then the length of the slice tail must be an intialized
+    ///     - a [slice](std::slice), then the length of the slice tail must be an intialized
     ///       integer, and the size of the *entire value*
     ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
     ///     - a *trait object*, then the vtable part of the pointer must point
