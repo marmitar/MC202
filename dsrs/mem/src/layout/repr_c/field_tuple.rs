@@ -5,7 +5,7 @@ use super::{Layout, Result};
 
 /// Build the layout for the equivalent `#[repr(C)]` struct.
 #[inline]
-pub(super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: *const T::Last) -> Result<(Layout, isize, Layout)> {
+pub(super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: *const T::Last) -> Result<(Layout, usize, Layout)> {
     let last_layout = Layout::for_value_raw(val);
 
     let (layout, offset) = match T::START_LAYOUT.extend(last_layout) {
@@ -13,7 +13,7 @@ pub(super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: *
         Ok(data) => data
     };
 
-    Ok((layout.pad_to_align(), offset as isize, last_layout))
+    Ok((layout.pad_to_align(), offset, last_layout))
 }
 
 
@@ -58,7 +58,7 @@ pub unsafe trait FieldTuple {
         let (_, offset, layout) = layout_with_last_field::<Self>(last)?;
 
         // pointer to last field in struct
-        let data_ptr = ptr.offset(offset);
+        let data_ptr = ptr.add(offset);
         // must be aligned to `Self::Last`
         debug_assert!(layout.is_aligned(data_ptr) && layout.is_aligned(last));
 
@@ -76,7 +76,7 @@ pub unsafe trait FieldTuple {
         let (_, offset, layout) = layout_with_last_field::<Self>(last)?;
 
         // pointer to last field in struct
-        let data_ptr = ptr.offset(offset);
+        let data_ptr = ptr.add(offset);
         // must be aligned to `Self::Last`
         debug_assert!(layout.is_aligned(data_ptr) && layout.is_aligned(last));
 
@@ -165,7 +165,7 @@ macro_rules! impl_field_tuple {
                         // calculates the field offset while extending the layout
                         let (new_layout, offset) = layout.extend(Layout::new::<$type>())?;
                         // adjust pointer to field position
-                        let data_ptr = ptr.offset(offset as isize) as *mut $type;
+                        let data_ptr = ptr.add(offset) as *mut $type;
                         // write field
                         std::ptr::write(data_ptr, $name);
 
@@ -188,7 +188,7 @@ macro_rules! impl_field_tuple {
                         // calculates the field offset while extending the layout
                         let (new_layout, offset) = layout.extend(Layout::new::<$type>())?;
                         // adjust pointer to field position
-                        let data_ptr = ptr.offset(offset as isize) as *mut $type;
+                        let data_ptr = ptr.add(offset) as *mut $type;
                         // write field
                         let $name = std::ptr::read(data_ptr);
 
