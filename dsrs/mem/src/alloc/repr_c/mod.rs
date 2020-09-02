@@ -16,4 +16,3 @@ pub unsafe trait ReprC {
     fn expand(inner: Box<Last<Self>>, fields: Start<Self>) -> Box<Self>;
     fn split(self: Box<Self>) -> (Box<Last<Self>>, Start<Self>);
 }
-

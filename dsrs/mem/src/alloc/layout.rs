@@ -23,7 +23,26 @@ const fn size_align_val<T: ?Sized>(val: &T) -> (usize, usize) {
 
 /// Get `(size, align)` from raw pointer.
 ///
+/// # Safety
 ///
+/// This function is only safe to call if the following conditions hold:
+///
+/// - If `T` is `Sized`, this function is always safe to call.
+/// - If the unsized tail of `T` is:
+///     - a [slice](std::slice), then the length of the slice tail must be an
+///       intialized integer, and the size of the *entire value*
+///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+///     - a *trait object*, then the vtable part of the pointer must point
+///       to a valid vtable for the type `T` acquired by an unsizing coersion,
+///       and the size of the *entire value*
+///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+///     - an (unstable) extern type, then this function is always safe to
+///       call, but may panic or otherwise return the wrong value, as the
+///       extern type's layout is not known. This is the same behavior as
+///       [`Layout::for_value`] on a reference to an extern type tail.
+///     - otherwise, it is conservatively not allowed to call this function.
+///
+/// See [`std::mem::size_of_val_raw`] and [`std::mem::align_of_val_raw`].
 #[inline(always)]
 const unsafe fn size_align_val_raw<T: ?Sized>(ptr: *const T) -> (usize, usize) {
     size_align_val(&*ptr)
@@ -61,7 +80,7 @@ const fn overflow_padded(size: usize, align: usize) -> bool {
 }
 
 /// Instance of [`LayoutErr`].
-const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
+pub (super) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
     // check that the error is a unitary type
     Err(err) if size_of::<LayoutErr>() == 0 => err,
     _ => unreachable!()
@@ -230,6 +249,11 @@ impl Layout {
     /// will be properly aligned, but *no trailing padding*.
     ///
     /// See [`std::alloc::Layout::extend`].
+    ///
+    /// # Errors
+    ///
+    /// This will only error in case of arithmetic overflow or
+    /// if it would overflow when padding.
     #[inline]
     pub const fn extend(&self, next: Self) -> Result<(Self, usize)> {
         let new_align = max(self.align(), next.align());
@@ -263,7 +287,7 @@ impl Layout {
     /// # Example
     ///
     /// ```
-    /// # use mem::layout::Layout;
+    /// # use mem::alloc::Layout;
     /// #[repr(C)]
     /// struct Empty {}
     ///
@@ -282,7 +306,7 @@ impl Layout {
     /// The layout of a `#[repr(C)]` struct:
     ///
     /// ```
-    /// use mem::layout::Layout;
+    /// use mem::alloc::Layout;
     ///
     /// #[repr(C)]
     /// struct CStruct {
@@ -297,6 +321,11 @@ impl Layout {
     ///
     /// assert_eq!(layout, Layout::new::<CStruct>())
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// This will only error in case of arithmetic overflow or
+    /// if it would overflow when padding.
     #[inline]
     pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N])> {
         let mut offsets = [0; N];
@@ -323,7 +352,7 @@ impl Layout {
     /// # Example
     ///
     /// ```
-    /// use mem::layout::Layout;
+    /// use mem::alloc::Layout;
     ///
     /// let text = "some string";
     /// let layout = Layout::for_value(text);

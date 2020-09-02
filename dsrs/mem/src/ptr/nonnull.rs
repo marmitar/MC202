@@ -18,18 +18,6 @@ pub struct NonNull<T: ?Sized>(pub std::ptr::NonNull<T>);
 
 
 impl<T: ?Sized> NonNull<T> {
-    /// Creates a new `NonNull`.
-    ///
-    /// See [`std::ptr::NonNull::new_unchecked`].
-    ///
-    /// # Safety
-    ///
-    /// `ptr` must be non-null.
-    #[inline]
-    pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
-        Self(std::ptr::NonNull::new_unchecked(ptr))
-    }
-
     /// Creates a new `NonNull` if `ptr` is non-null.
     ///
     /// See [`std::ptr::NonNull::new`]
@@ -44,6 +32,18 @@ impl<T: ?Sized> NonNull<T> {
         }
     }
 
+    /// Creates a new `NonNull`.
+    ///
+    /// See [`std::ptr::NonNull::new_unchecked`].
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be non-null.
+    #[inline]
+    pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
+        Self(std::ptr::NonNull::new_unchecked(ptr))
+    }
+
     /// Acquires the underlying `*mut` pointer.
     ///
     /// See [`std::ptr::NonNull::as_ptr`].
@@ -52,13 +52,12 @@ impl<T: ?Sized> NonNull<T> {
         self.0.as_ptr()
     }
 
-    /// Returns a shared reference to the value. If the value may be uninitialized, [`as_uninit_ref`]
-    /// must be used instead.
+    /// Returns a shared reference to the value. If the value may be uninitialized,
+    /// [`as_uninit_ref`] must be used instead.
     ///
-    /// For the mutable counterpart see [`as_mut`].
+    /// For the mutable counterpart see [`as_mut`](NonNull::as_mut).
     ///
     /// [`as_uninit_ref`]: #method.as_uninit_ref
-    /// [`as_mut`]: #method.as_mut
     ///
     /// # Safety
     ///
@@ -81,13 +80,10 @@ impl<T: ?Sized> NonNull<T> {
         &*(self.0.as_ptr() as *const T)
     }
 
-    /// Returns a unique reference to the value. If the value may be uninitialized, [`as_uninit_mut`]
-    /// must be used instead.
+    /// Returns a unique reference to the value. If the value may be uninitialized,
+    /// [`as_uninit_mut`](NonNull::as_init_mut) must be used instead.
     ///
-    /// For the shared counterpart see [`as_ref`].
-    ///
-    /// [`as_uninit_mut`]: #method.as_uninit_mut
-    /// [`as_ref`]: #method.as_ref
+    /// For the shared counterpart see [`as_ref`](NonNull::as_ref).
     ///
     /// # Safety
     ///
