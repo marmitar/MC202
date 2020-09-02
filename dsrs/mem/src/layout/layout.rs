@@ -1,7 +1,8 @@
 //! Data in memory layout.
 
-use std::alloc::{Layout as Inner, LayoutErr};
+use std::alloc::Layout as Inner;
 use std::mem::{size_of, align_of};
+use super::{LayoutErr, Result};
 
 
 /// Get `(size, align)` for [`Sized`] types.
@@ -77,7 +78,7 @@ impl Layout {
 
     /// Read [`std::alloc::Layout::from_size_align`]
     #[inline]
-    pub const fn from_size_align(size: usize, align: usize) -> Result<Self, LayoutErr> {
+    pub const fn from_size_align(size: usize, align: usize) -> Result<Self> {
         // 0 is not a power of 2
         if hint::unlikely!(!align.is_power_of_two()) {
             return Err(LAYOUT_ERR);
@@ -155,7 +156,7 @@ impl Layout {
 
     /// Read [`std::alloc::Layout::extend`]
     #[inline]
-    pub const fn extend(&self, next: Self) -> Result<(Self, usize), LayoutErr> {
+    pub const fn extend(&self, next: Self) -> Result<(Self, usize)> {
         let new_align = max(self.align(), next.align());
         let pad = self.padding_needed_for(next.align());
 
@@ -222,7 +223,7 @@ impl Layout {
     /// assert_eq!(layout, Layout::new::<CStruct>())
     /// ```
     #[inline]
-    pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N]), LayoutErr> {
+    pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N])> {
         let mut offsets = [0; N];
         let mut layout = *self;
 
