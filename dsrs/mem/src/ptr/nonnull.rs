@@ -1,5 +1,4 @@
 //! Pointers that can never be null.
-
 use std::fmt::{Debug, Pointer, Formatter, Result};
 use std::hash::{Hash, Hasher};
 use std::cmp::{Ord, PartialOrd, Ordering};
