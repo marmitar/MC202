@@ -1,3 +1,37 @@
+//! Library with memory management APIs.
+//!
+//! # `#[repr(C)]` struct management
+//!
+//! The only non trivial structure representation in Rust with specified
+//! layout is based on the C structure layout. So for this kind of struct,
+//! it is possible to build the object at the heap, instead of the common way
+//! of building the object on the stack and sending it to the heap. Building
+//! on the heap is extremely useful when the struct can't be know at compile
+//! time, that is, when the implementator struct can't know to be
+//! [`Sized`](Sized).
+//!
+//! For `#[repr(C)]` structs, the trait [`ReprC`](alloc::ReprC) can be safely
+//! implemented, when the [`Fields`](alloc::ReprC::Fields) are described
+//! correctly. The trait then is capable of safely building a `Box<Self>`
+//! with the starting, sized fields [`Start<Self>`](alloc::Start) and a
+//! [`Box<Last<Self>>`](alloc::Last) with the last field. The trait can
+//! also break apart the structure still on the heap, returning each of
+//! its fields.
+//!
+//! # Wrappers
+//!
+//! This lib contains wrappers for [`std`], with a bit more `const`ness.
+//!
+//! * [`NonNull`](ptr::NonNull)
+//! * [`Layout`](alloc::Layout)
+//!
+//! # Utility funtions
+//!
+//! * [`is_fat_pointer`](ptr::is_fat_pointer): check that `*mut T` is a fat pointer.
+//! * [`update_data`](ptr::update_data): updates fat pointers, keeping the metadata.
+//! * [`update_metadata`](ptr::update_metadata): updates the metadata for fat pointers.
+//! * [`grow`](alloc::grow): increases allocated memory, keeping pointer metadata.
+//! * [`shrink`](alloc::shrink): reduces allocated memory, keeping pointer metadata.
 #![feature(unsafe_block_in_unsafe_fn)]
 #![feature(core_intrinsics)]
 #![feature(layout_for_ptr)]
