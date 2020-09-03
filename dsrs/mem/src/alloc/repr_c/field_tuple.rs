@@ -1,26 +1,12 @@
 //! Associated types for the fields in a `#[repr(C)]` struct.
 use super::{Layout, Result};
+use std::intrinsics::assert_inhabited;
 
 /// Build the layout for the equivalent `#[repr(C)]` struct.
 ///
 /// # Safety
 ///
-/// This function is only safe to call if the following conditions hold:
-///
-/// - If `T::Last` is `Sized`, this function is always safe to call.
-/// - If the unsized tail of `T::Last` is:
-///     - a [slice](std::slice), then the length of the slice tail must be an
-///       intialized integer, and the size of the *entire value*
-///       (dynamic tail length + statically sized prefix) must fit in `isize`.
-///     - a *trait object*, then the vtable part of the pointer must point
-///       to a valid vtable for the type `T::Last` acquired by an unsizing
-///       coersion, and the size of the *entire value*
-///       (dynamic tail length + statically sized prefix) must fit in `isize`.
-///     - an (unstable) extern type, then this function is always safe to
-///       call, but may panic or otherwise return the wrong value, as the
-///       extern type's layout is not known. This is the same behavior as
-///       [`Layout::for_value`] on a reference to an extern type tail.
-///     - otherwise, it is conservatively not allowed to call this function.
+/// This function is always safe if `val` is a valid reference.
 ///
 /// # Error
 ///
@@ -72,11 +58,9 @@ pub unsafe trait FieldTuple {
     ///
     /// It must also be valid acording to [`std::ptr`](std::ptr#safety).
     ///
-    /// # Error
-    ///
-    /// This will only error if an arithmetic overflow happens or if the
-    /// layout of the specified struct would overflow when padded.
-    unsafe fn write_start(ptr: *mut u8, start: Self::Start) -> Result<()>;
+    /// Besides all that, the layout of the specified struct may
+    /// never overflow, even when padded.
+    unsafe fn write_start(ptr: *mut u8, start: Self::Start);
 
     /// Reads contents of memory location with the starting fields of a `#[repr(C)]` struct.
     ///
@@ -91,13 +75,10 @@ pub unsafe trait FieldTuple {
     ///
     /// It must also be valid acording to [`std::ptr`](std::ptr#safety).
     ///
-    /// # Error
-    ///
-    /// This will only error if an arithmetic overflow happens or if the
-    /// layout of the specified struct would overflow when padded.
-    unsafe fn read_start(ptr: *const u8) -> Result<Self::Start>;
+    /// Besides all that, the layout of the specified struct may
+    /// never overflow, even when padded.
+    unsafe fn read_start(ptr: *const u8) -> Self::Start;
 
-    #[inline]
     /// Write the last field of an equivalent `#[repr(C)]` struct at the right offset.
     ///
     /// Memory may overlap.
@@ -112,14 +93,17 @@ pub unsafe trait FieldTuple {
     ///
     /// Both must be valid acording to [`std::ptr`](std::ptr#safety).
     ///
-    /// # Error
-    ///
-    /// This will only error if an arithmetic overflow happens or if the
-    /// layout of the specified struct would overflow when padded.
-    unsafe fn write_last(ptr: *mut u8, last: *const Self::Last) -> Result<()> {
+    /// Besides all that, the layout of the specified struct may
+    /// never overflow, even when padded.
+    #[inline]
+    unsafe fn write_last(ptr: *mut u8, last: *const Self::Last) {
         // get offset and layout for last field
         // SAFETY: given that `last` is dereferenceable, this should be valid
-        let (_, offset, layout) = unsafe { layout_with_last_field::<Self>(last)? };
+        let (offset, layout) = match unsafe { layout_with_last_field::<Self>(last) } {
+            Ok((_, offset, layout)) => (offset, layout),
+            // SAFETY: caller guarantees no overflow
+            Err(_) => unsafe { hint::unreachable!() }
+        };
 
         // pointer to last field in struct
         // SAFETY: if the ptr can hold the specified struct, the offset will be valid
@@ -130,11 +114,9 @@ pub unsafe trait FieldTuple {
         // copy the last field, which may overlap
         // SAFETY: caller must uphold for `last` and `data_ptr` is pointing
         // to the right offset at the struct
-        unsafe { std::ptr::copy(last as *const u8, data_ptr, layout.size()); }
-        Ok(())
+        unsafe { std::ptr::copy(last as *const u8, data_ptr, layout.size()) }
     }
 
-    #[inline]
     /// Read the last field of an equivalent `#[repr(C)]` struct at the right offset.
     ///
     /// Memory may overlap.
@@ -150,14 +132,17 @@ pub unsafe trait FieldTuple {
     ///
     /// Both must be valid acording to [`std::ptr`](std::ptr#safety).
     ///
-    /// # Error
-    ///
-    /// This will only error if an arithmetic overflow happens or if the
-    /// layout of the specified struct would overflow when padded.
-    unsafe fn read_last(ptr: *const u8, last: *mut Self::Last) -> Result<()> {
+    /// Besides all that, the layout of the specified struct may
+    /// never overflow, even when padded.
+    #[inline]
+    unsafe fn read_last(ptr: *const u8, last: *mut Self::Last) {
         // get offset and layout for last field
         // SAFETY: given that `last` is dereferenceable, this should be valid
-        let (_, offset, layout) = unsafe { layout_with_last_field::<Self>(last)? };
+        let (offset, layout) = match unsafe { layout_with_last_field::<Self>(last) } {
+            Ok((_, offset, layout)) => (offset, layout),
+            // SAFETY: caller guarantees no overflow
+            Err(_) => unsafe { hint::unreachable!() }
+        };
 
         // pointer to last field in struct
         // SAFETY: if the ptr can hold the specified struct, the offset will be valid
@@ -168,8 +153,7 @@ pub unsafe trait FieldTuple {
         // copy the last field, which may overlapp
         // SAFETY: caller must uphold for `last` and `data_ptr` is pointing
         // to the right offset at the struct
-        unsafe { std::ptr::copy(data_ptr, last as *mut u8, layout.size()); }
-        Ok(())
+        unsafe { std::ptr::copy(data_ptr, last as *mut u8, layout.size()) }
     }
 }
 
@@ -200,43 +184,43 @@ unsafe impl FieldTuple for () {
     const START_LAYOUT: Layout = layout_start!();
 
     #[inline]
-    unsafe fn write_start(ptr: *mut u8, _: ()) -> Result<()> {
+    unsafe fn write_start(ptr: *mut u8, _: ()) {
         // just to check alignment
         // SAFETY: the caller guarantees that `ptr` is
         // valid, ie. nonnull and aligned
-        unsafe { std::ptr::write(ptr as *mut (), ()); }
-        Ok(())
+        unsafe { std::ptr::write(ptr as *mut (), ()) }
     }
 
     #[inline]
-    unsafe fn read_start(ptr: *const u8) -> Result<()> {
+    unsafe fn read_start(ptr: *const u8) {
         // just to check alignment
         // SAFETY: the caller guarantees that `ptr` is
         // valid, ie. nonnull and aligned
-        unsafe { std::ptr::read(ptr as *const ()); }
-        Ok(())
+        unsafe { std::ptr::read(ptr as *const ()) }
     }
 
-    /// Will always error as never type should not exists.
+    /// Will always panic as never type should not exists.
     ///
     /// # Safety
     ///
     /// Always safe.
     #[inline]
-    unsafe fn write_last(_: *mut u8, _: *const !) -> Result<()> {
-        // never should have no layout
-        Err(crate::alloc::layout::LAYOUT_ERR)
+    unsafe fn write_last(_: *mut u8, _: *const !) {
+        // never type cannot have valid references
+        // SAFETY: happily panics
+        unsafe { assert_inhabited::<!>() }
     }
 
-    /// Will always error as never type should not exists.
+    /// Will always panic as never type should not exists.
     ///
     /// # Safety
     ///
     /// Always safe.
     #[inline]
-    unsafe fn read_last(_: *const u8, _: *mut !) -> Result<()> {
-        // never should have no layout
-        Err(crate::alloc::layout::LAYOUT_ERR)
+    unsafe fn read_last(_: *const u8, _: *mut !) {
+        // never type cannot have valid references
+        // SAFETY: happily panics
+        unsafe { assert_inhabited::<!>() }
     }
 }
 
@@ -255,7 +239,7 @@ macro_rules! impl_field_tuple {
             const START_LAYOUT: Layout = layout_start!($($type),*);
 
             #[inline]
-            unsafe fn write_start(ptr: *mut u8, ($($name,)*): ($($type,)*)) -> Result<()> {
+            unsafe fn write_start(ptr: *mut u8, ($($name,)*): ($($type,)*)) {
                 // just to check alignment
                 // SAFETY: the caller guarantees that `ptr` is nonnull and aligned
                 unsafe { std::ptr::write(ptr as *mut (), ()); }
@@ -264,7 +248,11 @@ macro_rules! impl_field_tuple {
                 let mut layout = Layout::EMPTY;
                 $(
                         // calculates the field offset while extending the layout
-                        let (new_layout, offset) = layout.extend(Layout::new::<$type>())?;
+                        let (new_layout, offset) = match layout.extend(Layout::new::<$type>()) {
+                            Ok((layout, offset)) => (layout, offset),
+                            // SAFETY: caller guarantees no overflow
+                            Err(_) => unsafe { hint::unreachable!() }
+                        };
                         // adjust pointer to field position
                         // SAFETY: if the ptr can hold the specified struct, the offset will be valid
                         let data_ptr = unsafe { ptr.add(offset) } as *mut $type;
@@ -277,12 +265,10 @@ macro_rules! impl_field_tuple {
                         // update layout
                         layout = new_layout;
                 )*
-
-                Ok(())
             }
 
             #[inline]
-            unsafe fn read_start(ptr: *const u8) -> Result<($($type,)*)> {
+            unsafe fn read_start(ptr: *const u8) -> ($($type,)*) {
                 // just to check alignment
                 // SAFETY: the caller guarantees that `ptr` is nonnull and aligned
                 unsafe { std::ptr::read(ptr as *const ()); }
@@ -291,7 +277,11 @@ macro_rules! impl_field_tuple {
                 let mut layout = Layout::EMPTY;
                 $(
                         // calculates the field offset while extending the layout
-                        let (new_layout, offset) = layout.extend(Layout::new::<$type>())?;
+                        let (new_layout, offset) = match layout.extend(Layout::new::<$type>()) {
+                            Ok((layout, offset)) => (layout, offset),
+                            // SAFETY: caller guarantees no overflow
+                            Err(_) => unsafe { hint::unreachable!() }
+                        };
                         // adjust pointer to field position
                         // SAFETY: if the ptr can hold the specified struct, the offset will be valid
                         let data_ptr = unsafe { ptr.add(offset) } as *mut $type;
@@ -305,7 +295,7 @@ macro_rules! impl_field_tuple {
                         layout = new_layout;
                 )*
 
-                Ok(($($name,)*))
+                ($($name,)*)
             }
         }
     }
