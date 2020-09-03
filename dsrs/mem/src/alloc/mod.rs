@@ -28,7 +28,7 @@ use crate::ptr::NonNull;
 /// case, ownership is still held by `ptr`.
 ///
 /// More details on [`AllocRef::grow`].
-#[inline]
+#[inline(always)]
 pub unsafe fn grow_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
     // SAFETY: caller guarantees that memory was allocated via this allocator and that new size is larger
     // beacuse data at `ptr` is initialized, the old layout fits `inner_ptr`
@@ -45,7 +45,7 @@ pub unsafe fn grow_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: Lay
 /// # Safety
 ///
 /// See [`grow_with`].
-#[inline]
+#[inline(always)]
 pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
     unsafe { grow_with(ptr, old_layout, new_layout, &mut Global) }
 }
@@ -71,7 +71,7 @@ pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, old_layout: Layout, new_layout: L
 /// case, ownership is still held by `ptr`.
 ///
 /// More details on [`AllocRef::shrink`].
-#[inline]
+#[inline(always)]
 pub unsafe fn shrink_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
     // SAFETY: caller guarantees that memory was allocated via this allocator and that new size is larger
     // beacuse data at `ptr` is initialized, the old layout fits `inner_ptr`
@@ -88,7 +88,7 @@ pub unsafe fn shrink_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: L
 /// # Safety
 ///
 /// See [`shrink_with`].
-#[inline]
+#[inline(always)]
 pub unsafe fn shrink<T: ?Sized>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
     unsafe { shrink_with(ptr, old_layout, new_layout, &mut Global) }
 }
