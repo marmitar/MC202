@@ -117,6 +117,24 @@ impl<T: ?Sized> NonNull<T> {
         NonNull(self.0.cast())
     }
 
+    /// Casts to a pointer of unsized type.
+    ///
+    /// # Safety
+    ///
+    /// If `T: Sized` and `U: Sized` this is always safe.
+    /// Otherwise, both pointer types `*mut T` and `*mut U`
+    /// must have the same width.
+    ///
+    /// Even in this last case, it is very *problematic* when
+    /// casting to different kinds of fat pointers, like
+    /// casting an `NonNull<str>` to NonNull<dyn Debug>`
+    /// will create an invalid pointer to the `Debug` vtable.
+    #[inline]
+    pub const unsafe fn cast_unsized<U: ?Sized>(self) -> NonNull<U> {
+
+        unsafe { *(&self as *const Self as *const NonNull<U>) }
+    }
+
     /// Creates a new `NonNull` from a reference.
     ///
     /// Since a valid reference is never null, this is always safe.
