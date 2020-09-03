@@ -16,8 +16,8 @@ use crate::ptr::NonNull;
 ///
 /// # Safety
 ///
-/// * `ptr` must denote a block of memory *currently allocated* via `alloc` with an
-/// initialized object of type `T`.
+/// * `ptr` must denote a block of memory *currently allocated* via `alloc`.
+/// * `old_layout` must *fit* that block of memory.
 /// * `new_layout.size()` must be greater than or equal to the object's current size.
 ///
 /// See also [`AllocRef::grow`].
@@ -29,16 +29,10 @@ use crate::ptr::NonNull;
 ///
 /// More details on [`AllocRef::grow`].
 #[inline]
-pub unsafe fn grow_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
-    let new_layout = new_layout.inner();
-    // SAFETY: caller guarantees inilization, so currently, this is safe for all rust types
-    let old_layout = unsafe { Layout::for_value_raw::<T>(ptr.as_ptr()) }.inner();
-    let inner_ptr = ptr.cast().inner();
-
-    // increase allocated memory
+pub unsafe fn grow_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
     // SAFETY: caller guarantees that memory was allocated via this allocator and that new size is larger
     // beacuse data at `ptr` is initialized, the old layout fits `inner_ptr`
-    let new_ptr = unsafe { alloc.grow(inner_ptr, old_layout, new_layout) }?.cast();
+    let new_ptr = unsafe { alloc.grow(ptr.cast().inner(), old_layout.inner(), new_layout.inner()) }?.cast();
 
     // change pointer, keep metadata
     Ok(ptr.update(NonNull(new_ptr)))
@@ -46,14 +40,14 @@ pub unsafe fn grow_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, new_layout: Lay
 
 /// Grow allocated memory with [`Global`] allocator.
 ///
-/// Equivalent to `grow_with(ptr, new_layout, &mut Global)`.
+/// Equivalent to `grow_with(ptr, old_layout, new_layout, &mut Global)`.
 ///
 /// # Safety
 ///
 /// See [`grow_with`].
 #[inline]
-pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
-    unsafe { grow_with(ptr, new_layout, &mut Global) }
+pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
+    unsafe { grow_with(ptr, old_layout, new_layout, &mut Global) }
 }
 
 /// Shrink allocated memory with given allocator.
@@ -65,8 +59,8 @@ pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, new_layout: Layout) -> Result<Non
 ///
 /// # Safety
 ///
-/// * `ptr` must denote a block of memory *currently allocated* via `alloc` with an
-/// initialized object of type `T`.
+/// * `ptr` must denote a block of memory *currently allocated* via `alloc`.
+/// * `old_layout` must *fit* that block of memory.
 /// * `new_layout.size()` must be smaller than or equal to the object's current size.
 ///
 /// See also [`AllocRef::shrink`].
@@ -78,16 +72,10 @@ pub unsafe fn grow<T: ?Sized>(ptr: NonNull<T>, new_layout: Layout) -> Result<Non
 ///
 /// More details on [`AllocRef::shrink`].
 #[inline]
-pub unsafe fn shrink_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
-    let new_layout = new_layout.inner();
-    // SAFETY: caller guarantees inilization, so currently, this is safe for all rust types
-    let old_layout = unsafe { Layout::for_value_raw::<T>(ptr.as_ptr()) }.inner();
-    let inner_ptr = ptr.cast().inner();
-
-    // reduces allocated memory
+pub unsafe fn shrink_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout, alloc: &mut A) -> Result<NonNull<T>, AllocErr> {
     // SAFETY: caller guarantees that memory was allocated via this allocator and that new size is larger
     // beacuse data at `ptr` is initialized, the old layout fits `inner_ptr`
-    let new_ptr = unsafe { alloc.shrink(inner_ptr, old_layout, new_layout) }?.cast();
+    let new_ptr = unsafe { alloc.shrink(ptr.cast().inner(), old_layout.inner(), new_layout.inner()) }?.cast();
 
     // change pointer, keep metadata
     Ok(ptr.update(NonNull(new_ptr)))
@@ -95,13 +83,13 @@ pub unsafe fn shrink_with<T: ?Sized, A: AllocRef>(ptr: NonNull<T>, new_layout: L
 
 /// Shrink allocated memory with [`Global`] allocator.
 ///
-/// Equivalent to `shrink_with(ptr, new_layout, &mut Global)`.
+/// Equivalent to `shrink_with(ptr, old_layout, new_layout, &mut Global)`.
 ///
 /// # Safety
 ///
 /// See [`shrink_with`].
 #[inline]
-pub unsafe fn shrink<T: ?Sized>(ptr: NonNull<T>, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
-    unsafe { shrink_with(ptr, new_layout, &mut Global) }
+pub unsafe fn shrink<T: ?Sized>(ptr: NonNull<T>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<T>, AllocErr> {
+    unsafe { shrink_with(ptr, old_layout, new_layout, &mut Global) }
 }
 
