@@ -3,7 +3,7 @@ mod layout;
 mod repr_c;
 
 pub use layout::{Layout, LayoutErr};
-pub use repr_c::ReprC;
+pub use repr_c::{ReprC, Start, Last};
 use std::alloc::{Global, AllocRef, AllocErr};
 use crate::ptr::NonNull;
 
