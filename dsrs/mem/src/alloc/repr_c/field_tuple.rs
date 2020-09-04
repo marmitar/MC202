@@ -30,11 +30,14 @@ pub (super) const unsafe fn layout_with_last_field<T: FieldTuple + ?Sized>(val: 
 /// Automatically implemented up to arity
 /// 26.
 ///
+/// This trait is sealed and cannot be
+/// implemented outside the crate.
+///
 /// # Safety
 ///
 /// This trait should not be implemented
 /// for any type. Only tuples.
-pub unsafe trait FieldTuple {
+pub unsafe trait FieldTuple: private::Sealed {
     /// The number of elements in the tuple.
     const ARITY: usize;
     /// The starting (sub)tuple.
@@ -157,6 +160,11 @@ pub unsafe trait FieldTuple {
     }
 }
 
+mod private {
+    /// Seal for [`FieldTuple`](super::FieldTuple).
+    pub trait Sealed {}
+}
+
 /// Count identifiers.
 macro_rules! count {
     () => { 0 };
@@ -175,6 +183,8 @@ macro_rules! layout_start {
     };
 }
 
+/// Unseal unit tuple.
+impl private::Sealed for () {}
 /// The unit is a tuple.
 unsafe impl FieldTuple for () {
     const ARITY: usize = count!();
@@ -232,6 +242,8 @@ unsafe impl FieldTuple for () {
 macro_rules! impl_field_tuple {
     // implementation for inhabited tuples
     ($($type: ident $name: ident),*; $last: ident) => {
+        impl<$($type,)* $last: ?Sized> private::Sealed for ($($type,)* $last,) {}
+
         unsafe impl<$($type,)* $last: ?Sized> FieldTuple for ($($type,)* $last,) {
             const ARITY: usize = count!($($type,)* $last);
             type Start = ($($type,)*);

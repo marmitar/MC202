@@ -2,7 +2,8 @@
 mod field_tuple;
 
 use std::alloc::handle_alloc_error;
-use field_tuple::{FieldTuple, layout_with_last_field};
+use field_tuple::layout_with_last_field;
+pub use field_tuple::FieldTuple;
 use super::layout::{Layout, Result};
 use super::{grow, shrink, NonNull};
 
