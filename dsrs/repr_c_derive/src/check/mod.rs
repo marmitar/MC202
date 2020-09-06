@@ -1,6 +1,7 @@
-//! Parsing and checking for `#[repr(..)]` attributes.
-mod hint;
+//! Parsing and checking for `#[repr(...)]` attributes.
+mod hints;
 mod attr;
+mod result;
 
-use self::hint::{ReprHint, ReprCHint};
-use attr::AttrRepr;
+pub use hints::{ReprHint, ReprCHint};
+pub use attr::AttrRepr;
