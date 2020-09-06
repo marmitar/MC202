@@ -1,15 +1,12 @@
+//! Checking presence of `#[repr(C)]` attributes.
 use proc_macro2::Span;
 use syn::parse::Error;
 use std::ops::BitOr;
-
-/// Specialized [`Result`](syn::parse::Result) for checking.
-///
-/// This represents a computation, without result, that may encounter errors.
-type Result = syn::parse::Result<()>;
+use super::Result;
 
 /// Status marker for `#[repr(C)]` attribute.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum Status {
+pub(super) enum Status {
     /// No `C` hint found yet.
     Missing,
     /// Found at least one `#[repr(C)]` attribute or equivalent.
