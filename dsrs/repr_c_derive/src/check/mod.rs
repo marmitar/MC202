@@ -1,5 +1,6 @@
-mod repr_hint;
-mod attr_repr;
+//! Parsing and checking for `#[repr(..)]` attributes.
+mod hint;
+mod attr;
 
-use repr_hint::{ReprHint, ReprCHint};
-use attr_repr::AttrRepr;
+use self::hint::{ReprHint, ReprCHint};
+use attr::AttrRepr;

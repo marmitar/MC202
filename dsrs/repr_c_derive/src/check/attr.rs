@@ -13,7 +13,7 @@ use super::ReprHint;
 ///
 /// ```text
 /// #[repr(i32, packed(8))]
-/// ^^^^^^^^^^^^^^^^^^^^^^^ a 'repr' attribute
+/// ^^^^^^^^^^^^^^^^^^^^^^^  a 'repr' attribute
 /// ```
 ///
 /// All `#[repr(...)]` attributes are [outer attributes], so they can't have a
@@ -21,7 +21,7 @@ use super::ReprHint;
 ///
 /// ```text
 /// #![feature(proc_macro)]
-///                         - NOT a 'repr' attribute
+///                          NOT a 'repr' attribute
 /// ```
 ///
 /// The attribute [`path`](Attribute#fields) must be composed of exactly one
@@ -29,7 +29,7 @@ use super::ReprHint;
 ///
 /// ```text
 /// #[derive(Debug)]
-///                 - NOT a 'repr' attribute
+///                          NOT a 'repr' attribute
 /// ```
 ///
 /// [outer attributes]: https://doc.rust-lang.org/reference/attributes.html
