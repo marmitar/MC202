@@ -81,10 +81,11 @@ impl Into<Result> for ReprResult {
     }
 }
 
-impl FromIterator<ReprResult> for ReprResult {
+impl<T: Into<ReprResult>> FromIterator<T> for ReprResult {
     #[inline]
-    fn from_iter<I: IntoIterator<Item=ReprResult>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
         iter.into_iter()
+            .map(Into::into)
             .fold(Self::new(), Self::combine)
     }
 }
@@ -117,7 +118,6 @@ impl From<AttrRepr> for ReprResult {
     }
 }
 
-
 impl From<Attribute> for ReprResult {
     #[inline]
     fn from(attr: Attribute) -> Self {
@@ -127,14 +127,5 @@ impl From<Attribute> for ReprResult {
             // ignore other attributes
             Err(_) => Self::new()
         }
-    }
-}
-
-impl FromIterator<Attribute> for ReprResult {
-    #[inline]
-    fn from_iter<I: IntoIterator<Item=Attribute>>(iter: I) -> Self {
-        iter.into_iter()
-            .map(Self::from)
-            .collect()
     }
 }
