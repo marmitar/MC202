@@ -184,7 +184,7 @@ fn repr_ident_span(ident: &Ident) -> Result<Span> {
         Ok(ident.span())
     } else {
         let message = format!("wrong identifier '{}', expected 'repr'", ident);
-        return Err(Error::new(ident.span(), message))
+        Err(Error::new(ident.span(), message))
     }
 }
 
@@ -206,7 +206,7 @@ impl TryFrom<Attribute> for AttrRepr {
         // the 'repr' identifier
         let ident_span = attr.path.get_ident().ok_or_else(|| {
             let message = "wrong path, 'repr' is an intrinsic Rust attribute";
-            return Error::new_spanned(&attr.path, message)
+            Error::new_spanned(&attr.path, message)
         }).and_then(repr_ident_span)?;
 
         // the arguments group
