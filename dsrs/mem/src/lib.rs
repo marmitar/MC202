@@ -49,7 +49,6 @@
 #![feature(const_result)]
 #![feature(const_panic)]
 #![feature(const_likely)]
-#![feature(const_generics)]
 #![feature(unsize)]
 #![feature(coerce_unsized)]
 #![feature(never_type)]
@@ -57,6 +56,9 @@
 #![feature(dispatch_from_dyn)]
 #![feature(allocator_api)]
 #![deny(unsafe_op_in_unsafe_fn)]
+// waiting on https://github.com/rust-lang/rust/issues/75913
+#![allow(incomplete_features)]
+#![feature(const_generics)]
 extern crate hint;
 
 pub mod ptr;
