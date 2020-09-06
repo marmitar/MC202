@@ -10,12 +10,12 @@ pub use attr::AttrRepr;
 /// Specialized [`Result`](syn::parse::Result) for checking.
 ///
 /// This represents a computation, without result, that may encounter errors.
-type Result = syn::parse::Result<()>;
+pub type Result = syn::parse::Result<()>;
 
 /// Special [`and`][and] that [`combine`][err]s errors when both are `Err`.
 ///
 /// [and]: std::result::Result::and
-/// [err]: Error::combine
+/// [err]: syn::parse::Error::combine
 pub fn combine(earlier: Result, later: Result) -> Result {
     match (earlier, later) {
         (Ok(_), result) => result,
