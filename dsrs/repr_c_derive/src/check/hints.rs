@@ -124,11 +124,11 @@ impl Into<Ident> for ReprCHint {
     }
 }
 
-impl TryFrom<&ReprHint> for ReprCHint {
+impl TryFrom<ReprHint> for ReprCHint {
     type Error = Error;
 
     #[inline]
-    fn try_from(hint: &ReprHint) -> Result<Self> {
+    fn try_from(hint: ReprHint) -> Result<Self> {
         // must have a 'C' identifier
         let (span, msg) = if hint.ident() != "C" {
             let message = "expected 'C' here, for a C layout hint";

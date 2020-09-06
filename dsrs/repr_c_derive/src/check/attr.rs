@@ -188,11 +188,11 @@ fn repr_ident_span(ident: &Ident) -> Result<Span> {
     }
 }
 
-impl TryFrom<&Attribute> for AttrRepr {
+impl TryFrom<Attribute> for AttrRepr {
     type Error = Error;
 
     #[inline]
-    fn try_from(attr: &Attribute) -> Result<Self> {
+    fn try_from(attr: Attribute) -> Result<Self> {
         // the pound token
         let pound = attr.pound_token;
         // check if outer attribute
@@ -210,7 +210,7 @@ impl TryFrom<&Attribute> for AttrRepr {
         }).and_then(repr_ident_span)?;
 
         // the arguments group
-        let group: Group = syn::parse2(attr.tokens.clone())?;
+        let group: Group = syn::parse2(attr.tokens)?;
         // which must be a parenthesis
         if group.delimiter() != Delimiter::Parenthesis {
             return Err(Error::new(group.span_open(), "expected '('"))
