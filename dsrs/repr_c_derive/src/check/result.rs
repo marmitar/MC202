@@ -1,10 +1,12 @@
 //! Checking validity of `#[repr(...)]` attributes.
 use proc_macro2::Span;
+use syn::Attribute;
 use syn::parse::Error;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 
-use super::{Result, combine, Status, ReprHint, ReprCHint};
+use super::{Result, combine, Status};
+use super::{ReprHint, ReprCHint, AttrRepr};
 use Status::{Missing, Found};
 
 /// Result tracker for checking `#[repr(...)]` attributes.
@@ -66,11 +68,26 @@ impl ReprResult {
     );
 
     /// Default error for when another `repr` hint is found at given `Span`.
+    #[inline]
     fn error(at: Span) -> Error {
         Error::new(at, Self::MESSAGE)
     }
 }
 
+impl Into<Result> for ReprResult {
+    #[inline]
+    fn into(self) -> Result {
+        combine(self.repr_c.into(), self.others)
+    }
+}
+
+impl FromIterator<ReprResult> for ReprResult {
+    #[inline]
+    fn from_iter<I: IntoIterator<Item=ReprResult>>(iter: I) -> Self {
+        iter.into_iter()
+            .fold(Self::new(), Self::combine)
+    }
+}
 
 impl From<ReprCHint> for ReprResult {
     #[inline]
@@ -83,6 +100,7 @@ impl From<ReprHint> for ReprResult {
     #[inline]
     fn from(hint: ReprHint) -> Self {
         let err_loc = hint.span();
+
         match ReprCHint::try_from(hint) {
             Ok(c_hint) => Self::from(c_hint),
             Err(_) => Self::other(err_loc)
@@ -90,17 +108,33 @@ impl From<ReprHint> for ReprResult {
     }
 }
 
-impl FromIterator<ReprResult> for ReprResult {
+impl From<AttrRepr> for ReprResult {
     #[inline]
-    fn from_iter<I: IntoIterator<Item=ReprResult>>(iter: I) -> Self {
-        iter.into_iter()
-            .fold(Self::new(), Self::combine)
+    fn from(attr: AttrRepr) -> Self {
+        attr.into_iter()
+            .map(Self::from)
+            .collect()
     }
 }
 
-impl Into<Result> for ReprResult {
+
+impl From<Attribute> for ReprResult {
     #[inline]
-    fn into(self) -> Result {
-        combine(self.repr_c.into(), self.others)
+    fn from(attr: Attribute) -> Self {
+        match AttrRepr::try_from(attr) {
+            // check only '#[repr(...)]'
+            Ok(attr) => attr.into(),
+            // ignore other attributes
+            Err(_) => Self::new()
+        }
+    }
+}
+
+impl FromIterator<Attribute> for ReprResult {
+    #[inline]
+    fn from_iter<I: IntoIterator<Item=Attribute>>(iter: I) -> Self {
+        iter.into_iter()
+            .map(Self::from)
+            .collect()
     }
 }
