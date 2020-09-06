@@ -22,8 +22,8 @@ use std::convert::TryFrom;
 /// ```
 #[derive(Debug, Clone)]
 pub struct ReprHint {
-    pub ident: Ident,
-    pub args: Option<Group>
+    ident: Ident,
+    args: Option<Group>
 }
 
 impl ReprHint {
