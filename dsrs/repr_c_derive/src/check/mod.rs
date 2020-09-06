@@ -2,9 +2,11 @@
 mod hints;
 mod attr;
 mod status;
+mod result;
 
 pub use hints::{ReprHint, ReprCHint};
 pub use attr::AttrRepr;
+use status::Status;
 
 
 /// Specialized [`Result`](syn::parse::Result) for checking.

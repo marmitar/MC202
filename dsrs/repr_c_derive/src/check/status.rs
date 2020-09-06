@@ -38,7 +38,7 @@ impl Status {
 
     /// [`Error`] message when `#[repr(C)]` attribute is missing.
     const MESSAGE: &'static str = concat!(
-        // this is constant because it is too large to well be indented
+        // constant because it is too large to be well indented
         "missing '#[repr(C)]' attribute, ",
         "'ReprC' trait cannot be safely implemented for other layouts"
     );
