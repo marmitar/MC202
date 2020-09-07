@@ -42,7 +42,7 @@ pub const FAT_POINTER_SIZE: usize = size_of::<*mut [u8]>();
 /// [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
 #[allow(clippy::inline_always)]
 #[must_use]
-#[inline(always)]
+#[inline(always)] // associated simple constant
 pub const fn is_thin_pointer<T: ?Sized>() -> bool {
     size_of::<*mut T>() == POINTER_SIZE
 }
@@ -68,7 +68,7 @@ pub const fn is_thin_pointer<T: ?Sized>() -> bool {
 /// not thin pointers.
 #[allow(clippy::inline_always)]
 #[must_use]
-#[inline(always)]
+#[inline(always)] // associated simple constant
 pub const fn is_fat_pointer<T: ?Sized>() -> bool {
     size_of::<*mut T>() == FAT_POINTER_SIZE
 }

@@ -162,7 +162,7 @@ impl Layout {
     /// See [`std::alloc::Layout::size`].
     #[allow(clippy::inline_always)]
     #[must_use]
-    #[inline(always)] // carry assumption
+    #[inline(always)] // carry assumption to caller
     pub const fn size(&self) -> usize {
         let size = self.0.size();
         // SAFTEY: a valid layout will never overflow when padded
@@ -176,10 +176,10 @@ impl Layout {
     /// See [`std::alloc::Layout::align`].
     #[allow(clippy::inline_always)]
     #[must_use]
-    #[inline(always)] // carry assumption
+    #[inline(always)] // carry assumption to caller
     pub const fn align(&self) -> usize {
         let align = self.0.align();
-        // SAFTEY: a valid has layout as a power of two
+        // SAFTEY: align has to be a power of two
         unsafe { hint::assume!(align.is_power_of_two()) };
         // this hint is for inlining
         align
