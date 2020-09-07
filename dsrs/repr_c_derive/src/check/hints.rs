@@ -62,14 +62,14 @@ impl ReprHint {
     ///             ^^^ these are the arguments
     /// ```
     #[inline]
-    pub fn args(&self) -> Option<&Group> {
+    pub const fn args(&self) -> Option<&Group> {
         self.args.as_ref()
     }
 }
 
 impl Parse for ReprHint {
     #[inline]
-    fn parse(input: ParseStream<'_>) -> Result<ReprHint> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         let ident = input.parse()?;
         let args = input.parse()?;
         Ok(Self { ident, args })
@@ -102,8 +102,8 @@ pub struct ReprCHint {
 impl ReprCHint {
     /// Just the `C` identifier, at the right [`Span`].
     #[inline]
-    fn indent(&self) -> Ident {
-        (*self).into()
+    fn indent(self) -> Ident {
+        self.into()
     }
 }
 

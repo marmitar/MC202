@@ -75,10 +75,7 @@ impl AttrRepr {
     /// This a path with just the `repr` [`ident`](Self::ident).
     #[inline]
     pub fn path(&self) -> Path {
-        PathSegment {
-            ident: self.ident(),
-            arguments: Default::default()
-        }.into()
+        PathSegment::from(self.ident()).into()
     }
 
     /// The attribute arguments.
@@ -226,7 +223,7 @@ impl TryFrom<Attribute> for AttrRepr {
 
 impl Parse for AttrRepr {
     #[inline]
-    fn parse(input: ParseStream<'_>) -> Result<AttrRepr> {
+    fn parse(input: ParseStream<'_>) -> Result<Self> {
         // sub tokens streams
         let (attribute, arguments);
 

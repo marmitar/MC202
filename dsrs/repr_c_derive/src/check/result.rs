@@ -58,19 +58,15 @@ impl ReprResult {
         }
     }
 
-    /// [`Error`] message when another `#[repr(...)]` attribute appears.
-    const MESSAGE: &'static str = concat!(
-        // constant because it is too large to be well indented
-        "only '#[repr(C)]' structs can implement 'ReprC' trait safely, ",
-        "with no other layout hints.", "
-
-        ", "Read the documentation for the trait for a better explanation."
-    );
-
     /// Default error for when another `repr` hint is found at given `Span`.
     #[inline]
     fn error(at: Span) -> Error {
-        Error::new(at, Self::MESSAGE)
+        let message = "only '#[repr(C)]' structs can implement 'ReprC' \
+            trait safely, with no other layout hints\
+            \n\n\
+            Read the documentation for the trait for a better explanation.";
+
+        Error::new(at, message)
     }
 }
 

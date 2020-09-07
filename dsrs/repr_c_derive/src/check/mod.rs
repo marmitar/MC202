@@ -1,4 +1,5 @@
 //! Parsing and checking for `#[repr(...)]` attributes.
+#![allow(clippy::module_name_repetitions)]
 mod hints;
 mod attr;
 mod status;

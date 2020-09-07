@@ -12,7 +12,7 @@ pub(super) enum Status {
     /// Found at least one `#[repr(C)]` attribute or equivalent.
     Found
 }
-use Status::*;
+use Status::{Missing, Found};
 
 impl Status {
     /// Returns [`Found`] when at least one of them is marked so.
@@ -36,18 +36,14 @@ impl Status {
         }
     }
 
-    /// [`Error`] message when `#[repr(C)]` attribute is missing.
-    const MESSAGE: &'static str = concat!(
-        // constant because it is too large to be well indented
-        "missing '#[repr(C)]' attribute, ",
-        "'ReprC' trait cannot be safely implemented for other layouts"
-    );
-
     /// Default error for when `C` hint is missing.
     /// Generated at [call site](Span::call_site).
     #[inline]
     fn error() -> Error {
-        Error::new(Span::call_site(), Self::MESSAGE)
+        let message = "missing '#[repr(C)]' attribute: \
+            'ReprC' trait cannot be safely implemented for other layouts";
+
+        Error::new(Span::call_site(), message)
     }
 }
 
