@@ -27,11 +27,16 @@
 //!
 //! # Utility funtions
 //!
-//! * [`is_fat_pointer`](ptr::is_fat_pointer): check that `*mut T` is a fat pointer.
-//! * [`update_data`](ptr::update_data): updates fat pointers, keeping the metadata.
-//! * [`update_metadata`](ptr::update_metadata): updates the metadata for fat pointers.
-//! * [`grow`](alloc::grow): increases allocated memory, keeping pointer metadata.
-//! * [`shrink`](alloc::shrink): reduces allocated memory, keeping pointer metadata.
+//! * [`is_fat_pointer`](ptr::is_fat_pointer): check that `*mut T` is a fat
+//!   pointer.
+//! * [`update_data`](ptr::update_data): updates fat pointers, keeping the
+//!   metadata.
+//! * [`update_metadata`](ptr::update_metadata): updates the metadata for fat
+//!   pointers.
+//! * [`grow`](alloc::grow): increases allocated memory, keeping pointer
+//!   metadata.
+//! * [`shrink`](alloc::shrink): reduces allocated memory, keeping pointer
+//!   metadata.
 #![feature(unsafe_block_in_unsafe_fn)]
 #![feature(core_intrinsics)]
 #![feature(layout_for_ptr)]
@@ -59,7 +64,8 @@
 // waiting on https://github.com/rust-lang/rust/issues/75913
 #![allow(incomplete_features)]
 #![feature(const_generics)]
-extern crate hint;
+#![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![allow(clippy::cargo_common_metadata)]
 
-pub mod ptr;
 pub mod alloc;
+pub mod ptr;

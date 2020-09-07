@@ -1,24 +1,28 @@
 //! Data in memory layout of objects.
-
-use std::alloc::Layout as Inner;
-use std::mem::{size_of, align_of};
 pub use std::alloc::LayoutErr;
+
 use crate::ptr::NonNull;
+use std::alloc::Layout as Inner;
+use std::mem::{align_of, size_of};
 
 /// Specialized [`Result`](std::result::Result) for
 /// [`Layout`] operations.
 pub type Result<T> = std::result::Result<T, LayoutErr>;
 
 /// Get `(size, align)` for [`Sized`] types.
-#[inline(always)]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)] // used only once
 const fn size_align<T>() -> (usize, usize) {
     (size_of::<T>(), align_of::<T>())
 }
 
 /// Get `(size, align)` from reference.
-#[inline(always)]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)] // used only once
 const fn size_align_val<T: ?Sized>(val: &T) -> (usize, usize) {
-    use std::mem::{size_of_val, align_of_val};
+    use std::mem::{align_of_val, size_of_val};
     (size_of_val(val), align_of_val(val))
 }
 
@@ -31,27 +35,31 @@ const fn size_align_val<T: ?Sized>(val: &T) -> (usize, usize) {
 /// - If `T` is `Sized`, this function is always safe to call.
 /// - If the unsized tail of `T` is:
 ///     - a [slice](std::slice), then the length of the slice tail must be an
-///       intialized integer, and the size of the *entire value*
-///       (dynamic tail length + statically sized prefix) must fit in `isize`.
-///     - a *trait object*, then the vtable part of the pointer must point
-///       to a valid vtable for the type `T` acquired by an unsizing coersion,
-///       and the size of the *entire value*
-///       (dynamic tail length + statically sized prefix) must fit in `isize`.
-///     - an (unstable) extern type, then this function is always safe to
-///       call, but may panic or otherwise return the wrong value, as the
-///       extern type's layout is not known. This is the same behavior as
+///       intialized integer, and the size of the *entire value* (dynamic tail
+///       length + statically sized prefix) must fit in `isize`.
+///     - a *trait object*, then the vtable part of the pointer must point to a
+///       valid vtable for the type `T` acquired by an unsizing coersion, and
+///       the size of the *entire value* (dynamic tail length + statically sized
+///       prefix) must fit in `isize`.
+///     - an (unstable) extern type, then this function is always safe to call,
+///       but may panic or otherwise return the wrong value, as the extern
+///       type's layout is not known. This is the same behavior as
 ///       [`Layout::for_value`] on a reference to an extern type tail.
 ///     - otherwise, it is conservatively not allowed to call this function.
 ///
 /// See [`std::mem::size_of_val_raw`] and [`std::mem::align_of_val_raw`].
-#[inline(always)]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)] // used only once
 const unsafe fn size_align_val_raw<T: ?Sized>(ptr: *const T) -> (usize, usize) {
-    use std::intrinsics::{size_of_val, min_align_of_val};
+    use std::intrinsics::{min_align_of_val, size_of_val};
     (size_of_val(ptr), min_align_of_val(ptr))
 }
 
 /// Maximum of two `usize`s.
-#[inline(always)]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)] // used only once
 const fn max(a: usize, b: usize) -> usize {
     if hint::likely!(a >= b) {
         a
@@ -62,7 +70,9 @@ const fn max(a: usize, b: usize) -> usize {
 
 /// Checks if type with `size` will overflow when
 /// padded to `align`.
-#[inline(always)]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)] // used only once
 const fn overflow_padded(size: usize, align: usize) -> bool {
     // From: std::alloc::Layout::from_size_align
 
@@ -82,12 +92,11 @@ const fn overflow_padded(size: usize, align: usize) -> bool {
 }
 
 /// Instance of [`LayoutErr`].
-pub (crate) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
+pub const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
     // check that the error is a unitary type
     Err(err) if size_of::<LayoutErr>() == 0 => err,
-    _ => unreachable!()
+    _ => unreachable!(),
 };
-
 
 /// Layout of a block of memory.
 ///
@@ -100,20 +109,22 @@ pub (crate) const LAYOUT_ERR: LayoutErr = match Inner::from_size_align(0, 0) {
 /// methods `const`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(transparent)]
-pub struct Layout(pub (crate) std::alloc::Layout);
+pub struct Layout(pub(crate) std::alloc::Layout);
 
 impl Layout {
-    /// Constructs a `Layout` from a given `size` and `align`,
-    /// or returns `LayoutErr` if any of the following conditions
-    /// are not met:
+    /// Constructs a `Layout` from a given `size` and `align`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LayoutErr` if any of the following conditions are not met:
     ///
     /// * `align` must not be zero,
     ///
     /// * `align` must be a power of two,
     ///
-    /// * `size`, when rounded up to the nearest multiple of `align`,
-    ///    must not overflow (i.e., the rounded value must be less than
-    ///    or equal to `usize::MAX`).
+    /// * `size`, when rounded up to the nearest multiple of `align`, must not
+    ///   overflow (i.e., the rounded value must be less than or equal to
+    ///   `usize::MAX`).
     ///
     /// See [`std::alloc::Layout::from_size_align`].
     #[inline]
@@ -139,6 +150,7 @@ impl Layout {
     ///
     /// This function is unsafe as it does not verify the preconditions from
     /// [`Layout::from_size_align`].
+    #[must_use]
     #[inline]
     pub const unsafe fn from_size_align_unchecked(size: usize, align: usize) -> Self {
         // SAFETY: the caller must guarantee a valid layout
@@ -148,11 +160,13 @@ impl Layout {
     /// The minimum size in bytes for a memory block of this layout.
     ///
     /// See [`std::alloc::Layout::size`].
-    #[inline(always)]
+    #[allow(clippy::inline_always)]
+    #[must_use]
+    #[inline(always)] // carry assumption
     pub const fn size(&self) -> usize {
         let size = self.0.size();
         // SAFTEY: a valid layout will never overflow when padded
-        unsafe { hint::assume!(!overflow_padded(size, self.align())); }
+        unsafe { hint::assume!(!overflow_padded(size, self.align())) };
         // this hint is for inlining
         size
     }
@@ -160,7 +174,9 @@ impl Layout {
     /// The minimum byte alignment for a memory block of this layout.
     ///
     /// See [`std::alloc::Layout::align`].
-    #[inline(always)]
+    #[allow(clippy::inline_always)]
+    #[must_use]
+    #[inline(always)] // carry assumption
     pub const fn align(&self) -> usize {
         let align = self.0.align();
         // SAFTEY: a valid has layout as a power of two
@@ -177,6 +193,7 @@ impl Layout {
     /// some other means.
     ///
     /// See [`std::alloc::Layout::dangling`].
+    #[must_use]
     #[inline]
     pub const fn dangling(&self) -> NonNull<u8> {
         NonNull(self.0.dangling())
@@ -185,6 +202,7 @@ impl Layout {
     /// Constructs a `Layout` suitable for holding a value of type `T`.
     ///
     /// See [`std::alloc::Layout::new`].
+    #[must_use]
     #[inline]
     pub const fn new<T>() -> Self {
         let (size, align) = size_align::<T>();
@@ -197,6 +215,7 @@ impl Layout {
     /// or other unsized type like a slice).
     ///
     /// See [`std::alloc::Layout::for_value`].
+    #[must_use]
     #[inline]
     pub const fn for_value<T: ?Sized>(val: &T) -> Self {
         let (size, align) = size_align_val(val);
@@ -215,13 +234,13 @@ impl Layout {
     ///
     /// - If `T` is `Sized`, this function is always safe to call.
     /// - If the unsized tail of `T` is:
-    ///     - a [slice](std::slice), then the length of the slice tail must be an
-    ///       intialized integer, and the size of the *entire value*
-    ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+    ///     - a [slice](std::slice), then the length of the slice tail must be
+    ///       an intialized integer, and the size of the *entire value* (dynamic
+    ///       tail length + statically sized prefix) must fit in `isize`.
     ///     - a *trait object*, then the vtable part of the pointer must point
-    ///       to a valid vtable for the type `T` acquired by an unsizing coersion,
-    ///       and the size of the *entire value*
-    ///       (dynamic tail length + statically sized prefix) must fit in `isize`.
+    ///       to a valid vtable for the type `T` acquired by an unsizing
+    ///       coersion, and the size of the *entire value* (dynamic tail length
+    ///       + statically sized prefix) must fit in `isize`.
     ///     - an (unstable) extern type, then this function is always safe to
     ///       call, but may panic or otherwise return the wrong value, as the
     ///       extern type's layout is not known. This is the same behavior as
@@ -229,6 +248,7 @@ impl Layout {
     ///     - otherwise, it is conservatively not allowed to call this function.
     ///
     /// See [`std::alloc::Layout::for_value_raw`].
+    #[must_use]
     #[inline]
     pub const unsafe fn for_value_raw<T: ?Sized>(val: *const T) -> Self {
         // SAFETY: caller guarantees valid type
@@ -243,6 +263,7 @@ impl Layout {
     /// (measured in bytes).
     ///
     /// See [`std::alloc::Layout::padding_needed_for`].
+    #[must_use]
     #[inline]
     pub const fn padding_needed_for(&self, align: usize) -> usize {
         let len = self.size();
@@ -258,6 +279,7 @@ impl Layout {
     /// of the layout's alignment.
     ///
     /// See [`std::alloc::Layout::pad_to_align`].
+    #[must_use]
     #[inline]
     pub const fn pad_to_align(&self) -> Self {
         let pad = self.padding_needed_for(self.align());
@@ -285,23 +307,24 @@ impl Layout {
 
         let offset = match self.size().checked_add(pad) {
             Some(offset) => offset,
-            None => return Err(LAYOUT_ERR)
+            None => return Err(LAYOUT_ERR),
         };
         let new_size = match offset.checked_add(next.size()) {
             Some(size) => size,
-            None => return Err(LAYOUT_ERR)
+            None => return Err(LAYOUT_ERR),
         };
 
         // SAFETY: the old Layouts already checked for power of 2
-        unsafe { hint::assume!(new_align.is_power_of_two()); }
+        unsafe { hint::assume!(new_align.is_power_of_two()) };
         match Self::from_size_align(new_size, new_align) {
             Err(err) => Err(err),
-            Ok(layout) => Ok((layout, offset))
+            Ok(layout) => Ok((layout, offset)),
         }
     }
 
     /// Const version of [`PartialEq::eq`].
-    #[inline(always)]
+    #[must_use]
+    #[inline]
     pub const fn eq(&self, other: &Self) -> bool {
         self.size() == other.size() && self.align() == other.align()
     }
@@ -317,10 +340,10 @@ impl Layout {
     ///
     /// assert_eq!(Layout::EMPTY, Layout::new::<Empty>());
     /// ```
-    pub const EMPTY: Layout = match Layout::from_size_align(0, 1) {
+    pub const EMPTY: Self = match Self::from_size_align(0, 1) {
         // check that the empty layout doesn't need padding
         Ok(layout) if layout.eq(&layout.pad_to_align()) => layout,
-        _ => unreachable!()
+        _ => unreachable!(),
     };
 
     /// Repeatedly apply [`Layout::extend`].
@@ -351,7 +374,10 @@ impl Layout {
     /// This will only error in case of arithmetic overflow or
     /// if it would overflow when padding.
     #[inline]
-    pub const fn extend_many<const N: usize>(&self, layouts: [Layout; N]) -> Result<(Layout, [usize; N])> {
+    pub const fn extend_many<const N: usize>(
+        &self,
+        layouts: [Self; N],
+    ) -> Result<(Self, [usize; N])> {
         let mut offsets = [0; N];
         let mut layout = *self;
 
@@ -359,7 +385,7 @@ impl Layout {
         while hint::likely!(i < N) {
             let (new, offset) = match layout.extend(layouts[i]) {
                 Ok(data) => data,
-                Err(err) => return Err(err)
+                Err(err) => return Err(err),
             };
 
             offsets[i] = offset;
@@ -383,7 +409,8 @@ impl Layout {
     ///
     /// assert!(layout.is_aligned(text as *const str))
     /// ```
-    #[inline(always)]
+    #[must_use]
+    #[inline]
     pub const fn is_aligned<T: ?Sized>(&self, ptr: *const T) -> bool {
         // type requirement
         debug_assert!(self.align().is_power_of_two());
@@ -399,7 +426,9 @@ impl Layout {
     }
 
     /// Recover inner [`std::alloc::Layout`] from `Layout`.
-    #[inline(always)]
+    #[allow(clippy::inline_always)]
+    #[must_use]
+    #[inline(always)] // transparent transmormation
     pub const fn inner(self) -> std::alloc::Layout {
         self.0
     }
@@ -413,6 +442,7 @@ mod tests {
     #[test]
     fn equivalent_methods() {
         use std::alloc::Layout as Inner;
+        use std::usize::MAX;
 
         type T1 = ();
         type T2 = String;
@@ -422,13 +452,26 @@ mod tests {
         assert_eq!(layout1.inner(), Inner::new::<T1>());
         assert_eq!(layout2.inner(), Inner::new::<T2>());
 
-        assert_eq!(Layout::from_size_align(10, 4), Inner::from_size_align(10, 4).map(Layout));
-        assert_eq!(Layout::from_size_align(13, 7), Inner::from_size_align(13, 7).map(Layout));
-        const MAX: usize = std::usize::MAX;
-        assert_eq!(Layout::from_size_align(MAX, 16), Inner::from_size_align(MAX, 16).map(Layout));
+        assert_eq!(
+            Layout::from_size_align(10, 4),
+            Inner::from_size_align(10, 4).map(Layout)
+        );
+        assert_eq!(
+            Layout::from_size_align(13, 7),
+            Inner::from_size_align(13, 7).map(Layout)
+        );
+        assert_eq!(
+            Layout::from_size_align(MAX, 16),
+            Inner::from_size_align(MAX, 16).map(Layout)
+        );
 
-        // SAFETY: Layout not used
-        unsafe { assert_eq!(Layout::from_size_align_unchecked(24, 8), Layout(Inner::from_size_align_unchecked(24, 8))); }
+        unsafe {
+            assert_eq!(
+                // SAFETY: align is valid and can't overflow
+                Layout::from_size_align_unchecked(24, 8),
+                Layout(Inner::from_size_align_unchecked(24, 8))
+            );
+        }
 
         assert_eq!(layout1.align(), layout1.inner().align());
         assert_eq!(layout2.size(), layout2.inner().size());
@@ -436,14 +479,37 @@ mod tests {
         let val = "string";
         assert_eq!(Layout::for_value(val), Layout(Inner::for_value(val)));
         let ptr = val as *const str;
-        // SAFETY: `ptr` is a valid reference
-        unsafe { assert_eq!(Layout::for_value_raw(ptr), Layout(Inner::for_value_raw(ptr))); }
+        unsafe {
+            assert_eq!(
+                // SAFETY: `ptr` is a valid reference
+                Layout::for_value_raw(ptr),
+                Layout(Inner::for_value_raw(ptr))
+            );
+        }
 
-        assert_eq!(layout2.padding_needed_for(256), layout2.inner().padding_needed_for(256));
-        assert_eq!(layout1.pad_to_align().inner(), layout1.inner().pad_to_align());
+        assert_eq!(
+            layout2.padding_needed_for(256),
+            layout2.inner().padding_needed_for(256)
+        );
+        assert_eq!(
+            layout1.pad_to_align().inner(),
+            layout1.inner().pad_to_align()
+        );
 
-        assert_eq!(layout1.extend(layout2), layout1.inner().extend(layout2.inner()).map(|(a, b)| (Layout(a), b)));
+        assert_eq!(
+            layout1.extend(layout2),
+            layout1
+                .inner()
+                .extend(layout2.inner())
+                .map(|(a, b)| (Layout(a), b))
+        );
         let overflow = Layout::from_size_align(MAX - 4, 2).unwrap();
-        assert_eq!(layout2.extend(overflow), layout2.inner().extend(overflow.inner()).map(|(a, b)| (Layout(a), b)));
+        assert_eq!(
+            layout2.extend(overflow),
+            layout2
+                .inner()
+                .extend(overflow.inner())
+                .map(|(a, b)| (Layout(a), b))
+        );
     }
 }

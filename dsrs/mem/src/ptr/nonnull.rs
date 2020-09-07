@@ -1,11 +1,11 @@
 //! Pointers that can never be null.
-use std::fmt::{Debug, Pointer, Formatter, Result};
-use std::hash::{Hash, Hasher};
-use std::cmp::{Ord, PartialOrd, Ordering};
-use std::ops::{CoerceUnsized, DispatchFromDyn};
-use std::mem::MaybeUninit;
-use std::marker::Unsize;
 use hint::likely;
+use std::cmp::{Ord, Ordering, PartialOrd};
+use std::fmt::{Debug, Formatter, Pointer, Result};
+use std::hash::{Hash, Hasher};
+use std::marker::Unsize;
+use std::mem::MaybeUninit;
+use std::ops::{CoerceUnsized, DispatchFromDyn};
 
 /// `*mut T` but non-zero and covariant.
 ///
@@ -14,14 +14,15 @@ use hint::likely;
 /// [`as_mut`](NonNull::as_mut) as `const`, along with a few
 /// other methods.
 #[repr(transparent)]
-pub struct NonNull<T: ?Sized>(pub (crate) std::ptr::NonNull<T>);
+pub struct NonNull<T: ?Sized>(pub(crate) std::ptr::NonNull<T>);
 
-
+#[allow(clippy::use_self)]
 impl<T: ?Sized> NonNull<T> {
     /// Creates a new `NonNull` if `ptr` is non-null.
     ///
     /// See [`std::ptr::NonNull::new`]
     #[allow(clippy::not_unsafe_ptr_arg_deref)]
+    #[must_use]
     #[inline]
     pub const fn new(ptr: *mut T) -> Option<Self> {
         if likely!(!ptr.is_null()) {
@@ -39,6 +40,7 @@ impl<T: ?Sized> NonNull<T> {
     /// # Safety
     ///
     /// `ptr` must be non-null.
+    #[must_use]
     #[inline]
     pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {
         // SAFETY: the caller must guarantee that `ptr` is non-null.
@@ -48,19 +50,22 @@ impl<T: ?Sized> NonNull<T> {
     /// Acquires the underlying `*mut` pointer.
     ///
     /// See [`std::ptr::NonNull::as_ptr`].
+    #[must_use]
     #[inline]
     pub const fn as_ptr(self) -> *mut T {
         self.0.as_ptr()
     }
 
-    /// Returns a shared reference to the value. If the value may be uninitialized,
-    /// [`as_uninit_ref`](NonNull::as_uninit_ref) must be used instead.
+    /// Returns a shared reference to the value. If the value may be
+    /// uninitialized, [`as_uninit_ref`](NonNull::as_uninit_ref) must be
+    /// used instead.
     ///
     /// For the mutable counterpart see [`as_mut`](NonNull::as_mut).
     ///
     /// # Safety
     ///
-    /// When calling this method, you have to ensure that all of the following is true:
+    /// When calling this method, you have to ensure that all of the following
+    /// is true:
     ///
     /// * The pointer must be properly aligned.
     ///
@@ -68,12 +73,14 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// * The pointer must point to an initialized instance of `T`.
     ///
-    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data.
+    /// * You must enforce Rust's aliasing rules, since the returned lifetime
+    ///   `'a` is arbitrarily chosen and does not necessarily reflect the actual
+    ///   lifetime of the data.
     ///
     /// This applies even if the result of this method is unused!
     ///
     /// See [`std::ptr::NonNull::as_ref`].
+    #[must_use]
     #[inline]
     pub const unsafe fn as_ref(&self) -> &T {
         // SAFETY: the caller must guarantee that
@@ -81,14 +88,16 @@ impl<T: ?Sized> NonNull<T> {
         unsafe { &*self.0.as_ptr() }
     }
 
-    /// Returns a unique reference to the value. If the value may be uninitialized,
-    /// [`as_uninit_mut`](NonNull::as_uninit_mut) must be used instead.
+    /// Returns a unique reference to the value. If the value may be
+    /// uninitialized, [`as_uninit_mut`](NonNull::as_uninit_mut) must be
+    /// used instead.
     ///
     /// For the shared counterpart see [`as_ref`](NonNull::as_ref).
     ///
     /// # Safety
     ///
-    /// When calling this method, you have to ensure that all of the following is true:
+    /// When calling this method, you have to ensure that all of the following
+    /// is true:
     ///
     /// * The pointer must be properly aligned.
     ///
@@ -96,12 +105,14 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// * The pointer must point to an initialized instance of `T`.
     ///
-    /// * You must enforce Rust's aliasing rules, since the returned lifetime `'a` is
-    ///   arbitrarily chosen and does not necessarily reflect the actual lifetime of the data..
+    /// * You must enforce Rust's aliasing rules, since the returned lifetime
+    ///   `'a` is arbitrarily chosen and does not necessarily reflect the actual
+    ///   lifetime of the data..
     ///
     /// This applies even if the result of this method is unused!
     ///
     /// See [`std::ptr::NonNull::as_mut`].
+    #[must_use]
     #[inline]
     pub const unsafe fn as_mut(&mut self) -> &mut T {
         // SAFETY: the caller must guarantee that
@@ -112,6 +123,7 @@ impl<T: ?Sized> NonNull<T> {
     /// Casts to a pointer of another type.
     ///
     /// See [`std::ptr::NonNull::cast`].
+    #[must_use]
     #[inline]
     pub const fn cast<U>(self) -> NonNull<U> {
         NonNull(self.0.cast())
@@ -127,11 +139,11 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// Even in this last case, it is very *problematic* when
     /// casting to different kinds of fat pointers, like
-    /// casting an `NonNull<str>` to NonNull<dyn Debug>`
+    /// casting an `NonNull<str>` to `NonNull<dyn Debug>`
     /// will create an invalid pointer to the `Debug` vtable.
+    #[must_use]
     #[inline]
     pub const unsafe fn cast_unsized<U: ?Sized>(self) -> NonNull<U> {
-
         unsafe { *(&self as *const Self as *const NonNull<U>) }
     }
 
@@ -154,6 +166,7 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// assert_eq!(nonnull.as_ptr(), &mut x as *mut _);
     /// ```
+    #[must_use]
     #[inline]
     pub const fn from(value: &T) -> Self {
         let ptr = value as *const T as *mut T;
@@ -174,7 +187,9 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// assert_eq!(wrapper.inner(), nonnull);
     /// ```
-    #[inline(always)]
+    #[allow(clippy::inline_always)]
+    #[must_use]
+    #[inline(always)] // transparent transmormation
     pub const fn inner(self) -> std::ptr::NonNull<T> {
         self.0
     }
@@ -189,7 +204,9 @@ impl<T: ?Sized> NonNull<T> {
     /// assert_eq!(NonNull::<[u8]>::is_fat_pointer(), true);
     /// assert_eq!(NonNull::<f32>::is_fat_pointer(), false);
     /// ```
-    #[inline]
+    #[allow(clippy::inline_always)]
+    #[must_use]
+    #[inline(always)] // associated simple constant
     pub const fn is_fat_pointer() -> bool {
         super::is_fat_pointer::<T>()
     }
@@ -243,11 +260,12 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// assert!(std::ptr::eq(frankstein.as_ptr(), nonnull_c.as_ptr()));
     /// ```
+    #[must_use]
     #[inline]
     pub const fn update(self, data: NonNull<u8>) -> Self {
         let ptr = super::update_data(self.as_ptr(), data.as_ptr());
-        // SAFETY: data is not null
-        unsafe { NonNull::new_unchecked(ptr) }
+        // SAFETY: data was not null
+        unsafe { Self::new_unchecked(ptr) }
     }
 
     /// Updates metadata for fat pointers.
@@ -273,6 +291,7 @@ impl<T: ?Sized> NonNull<T> {
     ///
     /// assert_eq!(nonsized.update_metadata(4), Some(NonNull::from(&text[..4])));
     /// ```
+    #[must_use]
     #[inline]
     pub const fn update_metadata(self, metadata: usize) -> Option<Self> {
         if Self::is_fat_pointer() {
@@ -308,12 +327,13 @@ impl<T: ?Sized> NonNull<T> {
     /// let updated = unsafe { nonsized.update_metadata_unchecked(6) };
     /// assert_eq!(Some(updated), nonsized.update_metadata(6));
     /// ```
+    #[must_use]
     #[inline]
     pub const unsafe fn update_metadata_unchecked(self, metadata: usize) -> Self {
         // SAFETY: caller must ensure ptr is fat
         let ptr = unsafe { super::update_metadata(self.as_ptr(), metadata) };
         // SAFETY: self still is not null
-        unsafe { NonNull::new_unchecked(ptr) }
+        unsafe { Self::new_unchecked(ptr) }
     }
 }
 
@@ -321,13 +341,15 @@ impl<T> NonNull<T> {
     /// Creates a new `NonNull` that is dangling, but well-aligned.
     ///
     /// See [`std::ptr::NonNull::dangling`].
+    #[must_use]
     #[inline]
     pub const fn dangling() -> Self {
         Self(std::ptr::NonNull::dangling())
     }
 
-    /// Returns a shared references to the value. In contrast to [`as_ref`](NonNull::as_ref),
-    /// this does not require that the value has to be initialized.
+    /// Returns a shared references to the value. In contrast to
+    /// [`as_ref`](NonNull::as_ref), this does not require that the value
+    /// has to be initialized.
     ///
     /// # Safety
     ///
@@ -340,13 +362,15 @@ impl<T> NonNull<T> {
     /// * Correctly aliased.
     ///
     /// See [`std::ptr::NonNull::as_ref`]
+    #[must_use]
     #[inline]
     pub const unsafe fn as_uninit_ref(&self) -> &MaybeUninit<T> {
         unsafe { &*self.cast().as_ptr() }
     }
 
-    /// Returns a unique references to the value. In contrast to [`as_mut`](NonNull::as_mut),
-    /// this does not require that the value has to be initialized.
+    /// Returns a unique references to the value. In contrast to
+    /// [`as_mut`](NonNull::as_mut), this does not require that the value
+    /// has to be initialized.
     ///
     /// # Safety
     ///
@@ -359,6 +383,7 @@ impl<T> NonNull<T> {
     /// * Correctly aliased.
     ///
     /// See [`std::ptr::NonNull::as_mut`]
+    #[must_use]
     #[inline]
     pub const unsafe fn as_uninit_mut(&mut self) -> &mut MaybeUninit<T> {
         unsafe { &mut *self.cast().as_ptr() }
@@ -366,12 +391,13 @@ impl<T> NonNull<T> {
 }
 
 impl<T: ?Sized> Clone for NonNull<T> {
+    #[must_use]
     #[inline]
     fn clone(&self) -> Self {
         Self(self.0)
     }
 
-    #[inline(always)]
+    #[inline]
     fn clone_from(&mut self, other: &Self) {
         self.0 = other.0
     }
@@ -379,6 +405,7 @@ impl<T: ?Sized> Clone for NonNull<T> {
 impl<T: ?Sized> Copy for NonNull<T> {}
 
 impl<T: ?Sized> PartialEq for NonNull<T> {
+    #[must_use]
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
@@ -401,6 +428,7 @@ impl<T: ?Sized> Pointer for NonNull<T> {
 }
 
 impl<T: ?Sized> Into<*mut T> for NonNull<T> {
+    #[must_use]
     #[inline]
     fn into(self) -> *mut T {
         self.as_ptr()
@@ -408,6 +436,7 @@ impl<T: ?Sized> Into<*mut T> for NonNull<T> {
 }
 
 impl<T: ?Sized> Into<*const T> for NonNull<T> {
+    #[must_use]
     #[inline]
     fn into(self) -> *const T {
         self.as_ptr()
@@ -422,6 +451,7 @@ impl<T: ?Sized> Hash for NonNull<T> {
 }
 
 impl<T: ?Sized> Ord for NonNull<T> {
+    #[must_use]
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         self.as_ptr().cmp(&other.as_ptr())
@@ -429,6 +459,7 @@ impl<T: ?Sized> Ord for NonNull<T> {
 }
 
 impl<T: ?Sized> PartialOrd for NonNull<T> {
+    #[must_use]
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_ptr().partial_cmp(&other.as_ptr())
@@ -451,6 +482,7 @@ mod tests {
         use std::fmt::Debug;
         use std::mem::size_of;
 
+        #[allow(clippy::empty_enum)]
         enum Void {}
 
         fn assert_size<T: ?Sized>(spec: &str) {

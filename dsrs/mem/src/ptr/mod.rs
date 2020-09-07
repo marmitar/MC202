@@ -1,8 +1,9 @@
 //! Raw pointer management.
 mod nonnull;
 
-use std::mem::size_of;
 pub use nonnull::NonNull;
+
+use std::mem::size_of;
 
 /// Size in bytes of a thin pointer, ie. for any `T: Sized` this is the size
 /// of a `*mut T`.
@@ -39,7 +40,9 @@ pub const FAT_POINTER_SIZE: usize = size_of::<*mut [u8]>();
 /// ```
 ///
 /// [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/1861-extern-types.md
-#[inline]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)]
 pub const fn is_thin_pointer<T: ?Sized>() -> bool {
     size_of::<*mut T>() == POINTER_SIZE
 }
@@ -63,7 +66,9 @@ pub const fn is_thin_pointer<T: ?Sized>() -> bool {
 /// If there is another kind of pointer, say one that is zero sized
 /// or thrice as large they will not be considered fat pointers
 /// not thin pointers.
-#[inline]
+#[allow(clippy::inline_always)]
+#[must_use]
+#[inline(always)]
 pub const fn is_fat_pointer<T: ?Sized>() -> bool {
     size_of::<*mut T>() == FAT_POINTER_SIZE
 }
@@ -127,7 +132,7 @@ pub const fn is_fat_pointer<T: ?Sized>() -> bool {
 #[inline]
 pub const fn update_data<T: ?Sized>(mut ptr: *mut T, new_data: *mut u8) -> *mut T {
     let data = &mut ptr as *mut *mut T as *mut *mut u8;
-    unsafe { *data = new_data; }
+    unsafe { *data = new_data };
     ptr
 }
 
@@ -181,7 +186,8 @@ pub const fn update_data<T: ?Sized>(mut ptr: *mut T, new_data: *mut u8) -> *mut 
 pub const unsafe fn update_metadata<T: ?Sized>(mut ptr: *mut T, metadata: usize) -> *mut T {
     let data = &mut ptr as *mut *mut T as *mut *mut u8;
     unsafe {
-        // SAFETY: if *mut T is a fat pointer, there will always be a metadata ahead of it
+        // SAFETY: if *mut T is a fat pointer, there will always be a metadata ahead of
+        // it
         let meta = data.add(1) as *mut usize;
         *meta = metadata;
     }

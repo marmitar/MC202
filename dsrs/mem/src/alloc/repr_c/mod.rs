@@ -1,11 +1,12 @@
 //! Marker and associted types in a `#[repr(C)]` struct.
 mod field_tuple;
 
-use std::alloc::handle_alloc_error;
-use field_tuple::layout_with_last_field;
 pub use field_tuple::FieldTuple;
+
+use self::field_tuple::layout_with_last_field;
 use super::layout::{Layout, Result};
 use super::{grow, shrink, NonNull};
+use std::alloc::handle_alloc_error;
 
 /// The starting fields of a `#[repr(C)]` struct `T`.
 ///
@@ -198,24 +199,28 @@ pub unsafe trait ReprC {
     /// let words: Vec<_> = unique.data.split_whitespace().collect();
     /// assert_eq!(words, vec!["Hannah", "Montana"])
     /// ```
+    #[must_use]
     #[inline]
     fn expand(last: Box<Last<Self>>, fields: Start<Self>) -> Box<Self> {
         let last_ptr = Box::into_raw(last);
 
         // SAFETY: since `last` is a reference, it is a valid pointer to `Last`
-        let (self_layout, last_layout) = match unsafe { layout_with_last_field::<Self::Fields>(last_ptr) } {
-            // SAFETY: again, valid reference
-            Err(_) => handle_alloc_error(unsafe { Layout::for_value_raw(last_ptr).inner() }),
-            Ok((layout, _, last)) => (layout, last)
-        };
+        let (self_layout, last_layout) =
+            match unsafe { layout_with_last_field::<Self::Fields>(last_ptr) } {
+                // SAFETY: again, valid reference
+                Err(_) => handle_alloc_error(unsafe { Layout::for_value_raw(last_ptr).inner() }),
+                Ok((layout, _, last)) => (layout, last),
+            };
 
-        // SAFETY: a box must always be allocated via the global allocator and the poiner was nonnull
-        let (self_ptr, last_ptr) = match unsafe { grow(NonNull::new_unchecked(last_ptr), last_layout, self_layout) } {
-            Err(_) => handle_alloc_error(self_layout.inner()),
-            // SAFETY: pointer now can hold a Self, but its uninitialized,
-            // the metadata must also be the same, as Last is its last field
-            Ok(ptr) => (unsafe { ptr.cast_unsized::<Self>() }.as_ptr(), ptr.as_ptr())
-        };
+        // SAFETY: a box must always be allocated via the global allocator and the
+        // poiner was nonnull
+        let (self_ptr, last_ptr) =
+            match unsafe { grow(NonNull::new_unchecked(last_ptr), last_layout, self_layout) } {
+                Err(_) => handle_alloc_error(self_layout.inner()),
+                // SAFETY: pointer now can hold a Self, but its uninitialized,
+                // the metadata must also be the same, as Last is its last field
+                Ok(ptr) => (unsafe { ptr.cast_unsized::<Self>() }.as_ptr(), ptr.as_ptr()),
+            };
 
         // SAFETY: self_ptr can hold Self, which is a repr(C) with Self::Fields
         // also `last` is valid since it was a reference
@@ -234,16 +239,17 @@ pub unsafe trait ReprC {
 
     /// Splits a boxed `Self` into its first fields and the last field.
     ///
-    /// The last field is boxed as it may be dynamically sized. When `try_shrink` is `false`,
-    /// the field is just moved to the start of the struct and no reallocation happens.
+    /// The last field is boxed as it may be dynamically sized. When
+    /// `try_shrink` is `false`, the field is just moved to the start of the
+    /// struct and no reallocation happens.
     ///
-    /// Otherwise, when `try_shrink` is `false`, this will try to reduce memory usage
-    /// by reallocationg to a smaller memory block, when necessary.
+    /// Otherwise, when `try_shrink` is `false`, this will try to reduce memory
+    /// usage by reallocationg to a smaller memory block, when necessary.
     ///
-    /// Just like with [`expand`](ReprC::expand), the last value will probably need to be copied
-    ///  in a overlapping way, which might be slow for large values of [`Last<Self>`](Last).
-    /// If this is not desired, it is better implement the struct with `Box<T>` as its
-    /// last field.
+    /// Just like with [`expand`](ReprC::expand), the last value will probably
+    /// need to be copied  in a overlapping way, which might be slow for
+    /// large values of [`Last<Self>`](Last). If this is not desired, it is
+    /// better implement the struct with `Box<T>` as its last field.
     ///
     /// # Example
     ///
@@ -283,6 +289,7 @@ pub unsafe trait ReprC {
     /// # assert_eq!(&unique.data, name);
     /// # assert_eq!(unique.id, 12)
     /// ```
+    #[must_use]
     #[inline]
     fn split(self: Box<Self>, try_shrink: bool) -> (Box<Last<Self>>, Start<Self>) {
         let self_layout = Layout::for_value(self.as_ref());
@@ -291,9 +298,9 @@ pub unsafe trait ReprC {
         // but the pointer might be to another field
         let mut last_ptr = unsafe { *(&self_ptr as *const _ as *const *mut Last<Self>) };
 
-        // SAFETY: NOT SURE: Self can hold Last<Self>, the metadata is correct and, since
-        // Self is a #[repr(C)] struct, the pointer is aligned correctly, but it might not
-        // point to any valid Last object
+        // SAFETY: NOT SURE: Self can hold Last<Self>, the metadata is correct and,
+        // since Self is a #[repr(C)] struct, the pointer is aligned correctly,
+        // but it might not point to any valid Last object
         let last_layout = match unsafe { layout_with_last_field::<Self::Fields>(last_ptr) } {
             Err(_) => handle_alloc_error(self_layout.inner()),
             Ok((this_layout, _, layout)) => {
@@ -303,19 +310,20 @@ pub unsafe trait ReprC {
             }
         };
 
-        // SAFETY: last_ptr points to an initialized object of Self, so the start fields are safe to read
+        // SAFETY: last_ptr points to an initialized object of Self, so the start fields
+        // are safe to read
         let start = unsafe { Self::Fields::read_start(last_ptr as *const u8) };
-        // SAFETY: NOT SURE: Self can hold Last<Self>, the metadata is correct and, since
-        // Self is a #[repr(C)] struct, the pointer is aligned correctly, but it might not
-        // point to any valid Last object
-        unsafe { Self::Fields::read_last(self_ptr as *const u8, last_ptr); }
-
+        // SAFETY: NOT SURE: Self can hold Last<Self>, the metadata is correct and,
+        // since Self is a #[repr(C)] struct, the pointer is aligned correctly,
+        // but it might not point to any valid Last object
+        unsafe { Self::Fields::read_last(self_ptr as *const u8, last_ptr) };
 
         if try_shrink {
-            // SAFETY: a box must always be allocated via the global allocator and the poiner was nonnull
+            // SAFETY: a box must always be allocated via the global allocator and the
+            // poiner was nonnull
             match unsafe { shrink(NonNull::new_unchecked(self_ptr), self_layout, last_layout) } {
                 Err(_) => handle_alloc_error(last_layout.inner()),
-                Ok(new) => last_ptr = unsafe { new.cast_unsized().as_ptr() }
+                Ok(new) => last_ptr = unsafe { new.cast_unsized().as_ptr() },
             }
         } else {
             debug_assert!(self_layout.align() >= last_layout.align())
