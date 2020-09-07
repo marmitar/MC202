@@ -66,6 +66,8 @@
 #![feature(const_generics)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
+#![allow(clippy::multiple_crate_versions)]
+#![allow(clippy::wildcard_dependencies)]
 
 pub mod alloc;
 pub mod ptr;
