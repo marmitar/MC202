@@ -25,14 +25,16 @@ pub const unsafe fn unreachable() -> ! {
 /// This macro can only be called on `unsafe` contexts.
 /// It also works on `const` contexts.
 ///
-/// On debug builds this evaluates to [`unreachable::unreachable`](crate::unreachable::unreachable),
+/// On debug builds this evaluates to
+/// [`unreachable::unreachable`](crate::unreachable::unreachable),
 /// which safely panics and execution is aborted. On release
 /// mode, this becomes [`std::hint::unreachable_unchecked`],
 /// which is undefined behavior when reached.
 ///
 /// # Safety
 ///
-/// The same restrictions as [`unreachable_unchecked`](std::hint::unreachable_unchecked).
+/// The same restrictions as
+/// [`unreachable_unchecked`](std::hint::unreachable_unchecked).
 ///
 /// # Panics
 ///
@@ -63,12 +65,16 @@ pub const unsafe fn unreachable() -> ! {
 #[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! unreachable {
-    () => { $crate::unreachable::unreachable() };
+    () => {
+        $crate::unreachable::unreachable()
+    };
 }
 #[cfg(not(debug_assertions))]
 #[macro_export]
 macro_rules! unreachable {
-    () => { std::hint::unreachable_unchecked() };
+    () => {
+        std::hint::unreachable_unchecked()
+    };
 }
 
 #[cfg(test)]
@@ -93,7 +99,7 @@ mod tests {
         const fn sub1(num: NonZeroU32) -> u32 {
             match num.get().checked_sub(1) {
                 Some(num) => num,
-                None => unsafe { crate::unreachable!() }
+                None => unsafe { crate::unreachable!() },
             }
         }
 

@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn assuming_invariants() {
-        use std::ptr::{NonNull, null_mut};
+        use std::ptr::{null_mut, NonNull};
 
         let ptr = &mut 2 as *mut i32;
 
@@ -147,8 +147,8 @@ mod tests {
         match nonnull {
             None => panic!("impossible"),
             Some(nonnull) => {
-                unsafe { crate::assume!(!nonnull.as_ptr().is_null()); }
-                unsafe { crate::assume!(nonnull.as_ptr() == ptr); }
+                unsafe { crate::assume!(!nonnull.as_ptr().is_null()) };
+                unsafe { crate::assume!(nonnull.as_ptr() == ptr) };
 
                 assert_ne!(nonnull.as_ptr(), null_mut());
                 assert_eq!(nonnull.as_ptr(), ptr)
@@ -178,7 +178,7 @@ mod tests {
 
         const fn sub2n(num: NonZeroU32) -> Option<u32> {
             let num = num.get();
-            unsafe { crate::assume!(num > 0); }
+            unsafe { crate::assume!(num > 0) };
 
             sub2(num)
         }
@@ -191,7 +191,7 @@ mod tests {
         }
 
         for i in 0..=5 {
-            test(i, if i > 1 { Some(i-2) } else { None })
+            test(i, if i > 1 { Some(i - 2) } else { None })
         }
     }
 }
