@@ -1,11 +1,11 @@
 //! Syntax trees for `#[repr(...)]` attributes.
-use proc_macro2::{TokenStream, Span, Ident, Group, Delimiter};
-use syn::{Result, Token, Attribute, AttrStyle, Path, PathSegment};
-use syn::parse::{Parse, Parser, ParseStream, Error};
-use syn::punctuated::{Punctuated, Iter, IterMut, IntoIter};
-use syn::token::{Bracket, Paren};
+use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream};
 use quote::ToTokens;
 use std::convert::TryFrom;
+use syn::parse::{Error, Parse, ParseStream, Parser};
+use syn::punctuated::{IntoIter, Iter, IterMut, Punctuated};
+use syn::token::{Bracket, Paren};
+use syn::{AttrStyle, Attribute, Path, PathSegment, Result, Token};
 
 use super::ReprHint;
 
@@ -39,7 +39,7 @@ pub struct AttrRepr {
     pub bracket: Bracket,
     pub ident_span: Span,
     pub paren: Paren,
-    pub hints: Punctuated<ReprHint, Token![,]>
+    pub hints: Punctuated<ReprHint, Token![,]>,
 }
 
 impl AttrRepr {
@@ -113,10 +113,10 @@ impl PartialEq for AttrRepr {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.pound == other.pound
-        && self.bracket == other.bracket
-        && self.ident() == other.ident()
-        && self.paren == other.paren
-        && self.hints == other.hints
+            && self.bracket == other.bracket
+            && self.ident() == other.ident()
+            && self.paren == other.paren
+            && self.hints == other.hints
     }
 }
 
@@ -124,19 +124,19 @@ impl PartialEq<Attribute> for AttrRepr {
     #[inline]
     fn eq(&self, other: &Attribute) -> bool {
         self.pound == other.pound_token
-        && other.style == AttrStyle::Outer
-        && self.bracket == other.bracket_token
-        && self.path() == other.path
-        && syn::parse2::<Group>(other.tokens.clone())
-            .ok()
-            .filter(|group| {
-                group.delimiter() == Delimiter::Parenthesis
-                && Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())
-                    .ok()
-                    .filter(|parsed| parsed == &self.hints)
-                    .is_some()
-            })
-            .is_some()
+            && other.style == AttrStyle::Outer
+            && self.bracket == other.bracket_token
+            && self.path() == other.path
+            && syn::parse2::<Group>(other.tokens.clone())
+                .ok()
+                .filter(|group| {
+                    group.delimiter() == Delimiter::Parenthesis
+                        && Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())
+                            .ok()
+                            .filter(|parsed| parsed == &self.hints)
+                            .is_some()
+                })
+                .is_some()
     }
 }
 
@@ -198,7 +198,7 @@ impl Into<Attribute> for AttrRepr {
             style: AttrStyle::Outer,
             bracket_token: self.bracket,
             path: self.path(),
-            tokens: self.arguments().into_token_stream()
+            tokens: self.arguments().into_token_stream(),
         }
     }
 }
@@ -232,10 +232,14 @@ impl TryFrom<Attribute> for AttrRepr {
         let bracket = attr.bracket_token;
 
         // the 'repr' identifier
-        let ident_span = attr.path.get_ident().ok_or_else(|| {
-            let message = "wrong path, 'repr' is an intrinsic Rust attribute";
-            Error::new_spanned(&attr.path, message)
-        }).and_then(repr_ident_span)?;
+        let ident_span = attr
+            .path
+            .get_ident()
+            .ok_or_else(|| {
+                let message = "wrong path, 'repr' is an intrinsic Rust attribute";
+                Error::new_spanned(&attr.path, message)
+            })
+            .and_then(repr_ident_span)?;
 
         // the arguments group
         let group: Group = syn::parse2(attr.tokens)?;
@@ -248,7 +252,13 @@ impl TryFrom<Attribute> for AttrRepr {
         // the hint list must have no leading or trailing comma
         let hints = Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())?;
 
-        Ok(Self { pound, bracket, ident_span, paren, hints })
+        Ok(Self {
+            pound,
+            bracket,
+            ident_span,
+            paren,
+            hints,
+        })
     }
 }
 
@@ -260,12 +270,17 @@ impl Parse for AttrRepr {
 
         let pound = input.parse()?;
         let bracket = syn::bracketed!(attribute in input);
-        let ident_span = Ident::parse(&attribute)
-            .and_then(|ref id| repr_ident_span(id))?;
+        let ident_span = Ident::parse(&attribute).and_then(|ref id| repr_ident_span(id))?;
         let paren = syn::parenthesized!(arguments in attribute);
         let hints = Punctuated::parse_separated_nonempty(&arguments)?;
 
-        Ok(Self { pound, bracket, ident_span, paren, hints })
+        Ok(Self {
+            pound,
+            bracket,
+            ident_span,
+            paren,
+            hints,
+        })
     }
 }
 

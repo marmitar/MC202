@@ -1,9 +1,9 @@
 //! Syntax trees for `#[repr(...)]` attribute hints.
-use proc_macro2::{TokenStream, Span, Ident, Group};
 use proc_macro2::Delimiter::Parenthesis;
-use syn::parse::{Result, Error, Parse, ParseStream};
+use proc_macro2::{Group, Ident, Span, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
 use std::convert::TryFrom;
+use syn::parse::{Error, Parse, ParseStream, Result};
 
 /// Hints for the `#[repr(...)]` attribute.
 ///
@@ -24,7 +24,7 @@ use std::convert::TryFrom;
 #[derive(Debug, Clone)]
 pub struct ReprHint {
     ident: Ident,
-    args: Option<Group>
+    args: Option<Group>,
 }
 
 impl ReprHint {
@@ -35,9 +35,7 @@ impl ReprHint {
         let start = self.ident.span();
 
         match self.args {
-            Some(ref group) => {
-                start.join(group.span_close()).unwrap()
-            },
+            Some(ref group) => start.join(group.span_close()).unwrap(),
             None => start,
         }
     }
@@ -78,7 +76,7 @@ impl Parse for ReprHint {
                     repr hints can only have parenthesis";
                 return Err(Error::new(group.span_open(), message))
             },
-            args => args
+            args => args,
         };
 
         Ok(Self { ident, args })
@@ -101,10 +99,9 @@ impl PartialEq for ReprHint {
         match (self.args(), other.args()) {
             (None, None) => self.ident() == other.ident(),
             (Some(self_args), Some(other_args)) => {
-                self.ident() == other.ident()
-                && self_args.to_string() == other_args.to_string()
+                self.ident() == other.ident() && self_args.to_string() == other_args.to_string()
             },
-            _ => false
+            _ => false,
         }
     }
 }
@@ -119,7 +116,7 @@ impl PartialEq for ReprHint {
 /// ```
 #[derive(Debug, Copy, Clone)]
 pub struct ReprCHint {
-    pub span: Span
+    pub span: Span,
 }
 
 impl ReprCHint {
@@ -135,7 +132,7 @@ impl Into<ReprHint> for ReprCHint {
     fn into(self) -> ReprHint {
         ReprHint {
             ident: self.ident(),
-            args: None
+            args: None,
         }
     }
 }
@@ -199,14 +196,13 @@ impl PartialEq for ReprCHint {
 impl PartialEq<ReprHint> for ReprCHint {
     #[inline]
     fn eq(&self, other: &ReprHint) -> bool {
-        other.args().is_none()
-        && &self.ident() == other.ident()
+        other.args().is_none() && &self.ident() == other.ident()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ReprHint, ReprCHint};
+    use super::{ReprCHint, ReprHint};
 
     use quote::ToTokens;
     use std::convert::TryFrom;

@@ -1,8 +1,8 @@
 //! Checking presence of `#[repr(C)]` attributes.
-use proc_macro2::Span;
-use syn::parse::Error;
-use std::ops::BitOr;
 use super::Result;
+use proc_macro2::Span;
+use std::ops::BitOr;
+use syn::parse::Error;
 
 /// Status marker for `#[repr(C)]` attribute.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -10,9 +10,9 @@ pub(super) enum Status {
     /// No `C` hint found yet.
     Missing,
     /// Found at least one `#[repr(C)]` attribute or equivalent.
-    Found
+    Found,
 }
-use Status::{Missing, Found};
+use Status::{Found, Missing};
 
 impl Status {
     /// Returns [`Found`] when at least one of them is marked so.
@@ -21,7 +21,7 @@ impl Status {
         match (self, other) {
             // or missing when both are as well
             (Missing, Missing) => Missing,
-            (_, _) => Found
+            (_, _) => Found,
         }
     }
 
@@ -29,17 +29,17 @@ impl Status {
     ///
     /// `Found`s are `Ok`.
     #[inline]
-    pub fn into_result(self) ->  Result {
+    pub fn into_result(self) -> Result {
         match self {
             Found => Ok(()),
-            Missing => Err(Self::error())
+            Missing => Err(Self::error()),
         }
     }
 
     /// Default error for when `C` hint is missing.
     /// Generated at [call site](Span::call_site).
     #[inline]
-    pub (super) fn error() -> Error {
+    pub(super) fn error() -> Error {
         let message = "missing '#[repr(C)]' attribute: \
             'ReprC' trait cannot be safely implemented for other layouts";
 
@@ -72,7 +72,7 @@ impl Into<Result> for Status {
 
 #[cfg(test)]
 mod tests {
-    use super::{Missing, Found};
+    use super::{Found, Missing};
 
     #[allow(clippy::eq_op)]
     #[test]

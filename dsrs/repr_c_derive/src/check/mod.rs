@@ -1,17 +1,16 @@
 //! Parsing and checking for `#[repr(...)]` attributes.
 #![allow(clippy::module_name_repetitions)]
-mod hints;
 mod attr;
-mod status;
+mod hints;
 mod result;
+mod status;
 
-use hints::{ReprHint, ReprCHint};
 use attr::AttrRepr;
-use status::Status;
+use hints::{ReprCHint, ReprHint};
 use result::ReprResult;
+use status::Status;
 
 use syn::Attribute;
-
 
 /// Specialized [`Result`](syn::parse::Result) for checking.
 ///
@@ -30,7 +29,7 @@ pub fn combine(earlier: Result, later: Result) -> Result {
         (Err(mut old), Err(new)) => {
             old.combine(new);
             Err(old)
-        }
+        },
     }
 }
 
@@ -45,20 +44,18 @@ pub fn combine(earlier: Result, later: Result) -> Result {
 /// Also, if `#[repr(C)]` is not used at all, this will create another error
 /// at call site.
 #[inline]
-pub fn check_attributes<I: IntoIterator<Item=Attribute>>(iter: I) -> Result {
-    iter.into_iter()
-        .collect::<ReprResult>()
-        .into()
+pub fn check_attributes<I: IntoIterator<Item = Attribute>>(iter: I) -> Result {
+    iter.into_iter().collect::<ReprResult>().into()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{combine, check_attributes};
-    use super::{Result, ReprResult, Status};
+    use super::{check_attributes, combine};
+    use super::{ReprResult, Result, Status};
 
     use proc_macro2::Span;
-    use syn::Attribute;
     use syn::parse::{Error, Parser};
+    use syn::Attribute;
 
     #[track_caller]
     fn assert_result_eq(a: &Result, b: &Result) {
@@ -98,7 +95,7 @@ mod tests {
         assert_result_eq(&combine(err1.clone(), err2.clone()), &comb);
         assert_result_eq(
             &combine(combine(err1, Ok(())), combine(Ok(()), err2)),
-            &comb
+            &comb,
         );
     }
 
