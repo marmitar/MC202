@@ -1,4 +1,6 @@
-use proc_macro2::{Ident, Span, TokenStream};
+//! Macro for checking and implementing [`ReprC`](mem::alloc::ReprC) trait.
+use proc_macro2::{Span, TokenStream};
+use std::fmt::Display;
 use syn::Data::{Enum, Struct, Union};
 use syn::{Attribute, DeriveInput, Error, Result};
 
@@ -54,7 +56,7 @@ pub fn impl_repr_c(input: TokenStream, attr_check: impl AttrChecker) -> Result<T
     // the implementation is actually simple
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     Ok(quote! {
-        impl #impl_generics ::mem::alloc::ReprC for #name #ty_generics #where_clause {
+        unsafe impl #impl_generics ::mem::alloc::ReprC for #name #ty_generics #where_clause {
             type Fields = (#(#field,)*);
         }
     })
@@ -64,7 +66,7 @@ pub fn impl_repr_c(input: TokenStream, attr_check: impl AttrChecker) -> Result<T
 ///
 /// `ident` should be the struct name and `data_type` is a
 /// string describing the kind of the type (`enum` or `union`).
-fn not_a_struct(ident: &Ident, data_type: &str) -> Error {
+fn not_a_struct<T: Display + ?Sized>(ident: &T, data_type: &str) -> Error {
     let message = format!(
         "wrong type layout: 'ReprC' can only be \
         implemented for structs, but {} is an {}",
@@ -72,4 +74,100 @@ fn not_a_struct(ident: &Ident, data_type: &str) -> Error {
     );
 
     Error::new(Span::call_site(), message)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{impl_repr_c, not_a_struct};
+
+    use crate::check::check_attributes;
+    use proc_macro2::TokenStream;
+    use quote::quote;
+    use std::str::FromStr;
+    use syn::ItemImpl;
+
+    fn assert_derive_eq(input: &str, expected: TokenStream) {
+        let input = TokenStream::from_str(input).unwrap();
+        let expected: ItemImpl = syn::parse2(expected).unwrap();
+
+        let result = impl_repr_c(input, check_attributes).unwrap();
+        assert_eq!(expected, syn::parse2(result).unwrap())
+    }
+
+    #[test]
+    fn derive_ok() {
+        let input = "
+            #[repr(C)]
+            struct Test {
+                id: usize,
+                name: String,
+                points: f64
+            }
+        ";
+        let expected = quote! {
+            unsafe impl ::mem::alloc::ReprC for Test {
+                type Fields = (usize, String, f64,);
+            }
+        };
+
+        assert_derive_eq(input, expected)
+    }
+
+    #[test]
+    fn derive_generics() {
+        let input = "
+            #[repr(C)]
+            struct Test<T: Copy, U>
+                where U: Display
+            {
+                id: usize,
+                name: U,
+                points: T,
+            }
+        ";
+        let expected = quote! {
+            unsafe impl<T: Copy, U> ::mem::alloc::ReprC for Test<T, U>
+                where U: Display
+            {
+                type Fields = (usize, U, T,);
+            }
+        };
+
+        assert_derive_eq(input, expected)
+    }
+
+    #[test]
+    fn derive_enum() {
+        let input = "
+            #[repr(C)]
+            enum Question<T> {
+                Yes(T), No
+            }
+        ";
+
+        let input = TokenStream::from_str(input).unwrap();
+        let err = impl_repr_c(input, check_attributes).unwrap_err();
+
+        assert_eq!(
+            err.to_string(),
+            not_a_struct("Question", "enum").to_string()
+        )
+    }
+
+    #[test]
+    fn derive_no_repr() {
+        let input = "
+            struct Simple {
+                simple: i32
+            }
+        ";
+
+        let input = TokenStream::from_str(input).unwrap();
+        let err = impl_repr_c(input, check_attributes).unwrap_err();
+
+        assert_ne!(
+            err.to_string(),
+            not_a_struct("Simple", "struct").to_string()
+        )
+    }
 }
