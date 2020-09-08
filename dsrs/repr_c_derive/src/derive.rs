@@ -1,4 +1,4 @@
-//! Macro for checking and implementing [`ReprC`](mem::alloc::ReprC) trait.
+//! Functions for checking and implementing the [`ReprC`](mem::alloc::ReprC) trait.
 use proc_macro2::{Span, TokenStream};
 use std::fmt::Display;
 use syn::Data::{Enum, Struct, Union};
