@@ -39,7 +39,7 @@ impl Status {
     /// Default error for when `C` hint is missing.
     /// Generated at [call site](Span::call_site).
     #[inline]
-    fn error() -> Error {
+    pub (super) fn error() -> Error {
         let message = "missing '#[repr(C)]' attribute: \
             'ReprC' trait cannot be safely implemented for other layouts";
 
@@ -67,5 +67,25 @@ impl Into<Result> for Status {
     #[inline]
     fn into(self) -> Result {
         self.into_result()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Missing, Found};
+
+    #[allow(clippy::eq_op)]
+    #[test]
+    fn bitor() {
+        assert_eq!(Missing | Missing, Missing);
+        assert_eq!(Missing | Found, Found);
+        assert_eq!(Found | Missing, Found);
+        assert_eq!(Found | Found, Found);
+    }
+
+    #[test]
+    fn result() {
+        assert!(Missing.into_result().is_err());
+        assert!(Found.into_result().is_ok());
     }
 }

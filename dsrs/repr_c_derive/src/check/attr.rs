@@ -85,7 +85,7 @@ impl AttrRepr {
     ///       ^^^^^^^^^^^^^ these are the arguments
     /// ```
     #[inline]
-    pub fn arguments(self) -> Group {
+    pub fn arguments(&self) -> Group {
         let span = self.paren.span;
         let hints = self.hints.to_token_stream();
         let paren = Delimiter::Parenthesis;
@@ -106,6 +106,37 @@ impl AttrRepr {
     #[inline]
     pub fn iter_mut(&mut self) -> IterMut<'_, ReprHint> {
         self.hints.iter_mut()
+    }
+}
+
+impl PartialEq for AttrRepr {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.pound == other.pound
+        && self.bracket == other.bracket
+        && self.ident() == other.ident()
+        && self.paren == other.paren
+        && self.hints == other.hints
+    }
+}
+
+impl PartialEq<Attribute> for AttrRepr {
+    #[inline]
+    fn eq(&self, other: &Attribute) -> bool {
+        self.pound == other.pound_token
+        && other.style == AttrStyle::Outer
+        && self.bracket == other.bracket_token
+        && self.path() == other.path
+        && syn::parse2::<Group>(other.tokens.clone())
+            .ok()
+            .filter(|group| {
+                group.delimiter() == Delimiter::Parenthesis
+                && Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())
+                    .ok()
+                    .filter(|parsed| parsed == &self.hints)
+                    .is_some()
+            })
+            .is_some()
     }
 }
 
@@ -232,8 +263,60 @@ impl Parse for AttrRepr {
         let ident_span = Ident::parse(&attribute)
             .and_then(|ref id| repr_ident_span(id))?;
         let paren = syn::parenthesized!(arguments in attribute);
-        let hints = Punctuated::parse_terminated(&arguments)?;
+        let hints = Punctuated::parse_separated_nonempty(&arguments)?;
 
         Ok(Self { pound, bracket, ident_span, paren, hints })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AttrRepr;
+
+    use std::convert::TryInto;
+    use syn::Attribute;
+
+    #[test]
+    fn parsing() {
+        let parse = syn::parse_str::<AttrRepr>;
+
+        assert!(parse("#[repr(C)]").is_ok());
+        assert!(parse("#[repr(C, C,C)]").is_ok());
+        assert!(parse("#[repr(align(8))]").is_ok());
+        assert!(parse("#[repr(transparent, align(1))]").is_ok());
+        assert!(parse("#[repr(rust, packed(u12))]").is_ok());
+
+        assert!(parse("#[repr()]").is_err());
+        assert!(parse("#[repr]").is_err());
+        assert!(parse("#[repr(,)]").is_err());
+        assert!(parse("#[repr(C,C,)]").is_err());
+        assert!(parse("#[attr]").is_err());
+        assert!(parse("#![repr]").is_err());
+    }
+
+    #[test]
+    fn revertible() {
+        let parse = syn::parse_str::<AttrRepr>;
+
+        let attr_a = parse("#[repr(C)]").unwrap();
+        let attr: Attribute = attr_a.clone().into();
+        assert_eq!(attr_a, attr);
+        let attr: AttrRepr = attr.try_into().unwrap();
+        assert_eq!(attr_a, attr);
+
+        let attr_a = parse("#[repr(C, C,C)]").unwrap();
+        let attr: Attribute = attr_a.clone().into();
+        assert_eq!(attr_a, attr);
+        let attr: AttrRepr = attr.try_into().unwrap();
+        assert_eq!(attr_a, attr);
+
+        let attr_a = parse("#[repr(transparent, align(1))]").unwrap();
+        let attr: Attribute = attr_a.clone().into();
+        assert_eq!(attr_a, attr);
+        let attr: AttrRepr = attr.try_into().unwrap();
+        assert_eq!(attr_a, attr);
+
+        let err = parse("#[derive(ReprC)]").unwrap_err();
+        assert!(err.to_string().starts_with("wrong identifier 'derive'"));
     }
 }
