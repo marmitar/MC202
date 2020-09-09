@@ -1,6 +1,5 @@
 //! Associated types for the fields in a `#[repr(C)]` struct.
 use super::{Layout, Result};
-use std::intrinsics::assert_inhabited;
 
 /// Build the layout for the equivalent `#[repr(C)]` struct.
 ///
