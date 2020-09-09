@@ -1,4 +1,4 @@
-//! Functions for checking and implementing the [`ReprC`](mem::alloc::ReprC) trait.
+//! Functions for checking and implementing the [`ReprC`](../mem/alloc/trait.ReprC.html) trait.
 use proc_macro2::{Span, TokenStream};
 use std::fmt::Display;
 use syn::Data::{Enum, Struct, Union};
@@ -25,7 +25,7 @@ use quote::quote;
 pub trait AttrChecker: FnOnce(Vec<Attribute>) -> Result<()> {}
 impl<F: FnOnce(Vec<Attribute>) -> Result<()>> AttrChecker for F {}
 
-/// Implement [`ReprC`](mem::alloc::ReprC) for the struct in input
+/// Implement [`ReprC`](../mem/alloc/trait.ReprC.html) for the struct in input
 /// `TokenStream`.
 ///
 /// The [`attr_check`](AttrChecker) function should check the validity of the

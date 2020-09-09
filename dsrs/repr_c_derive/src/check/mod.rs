@@ -39,7 +39,7 @@ pub fn combine(earlier: Result, later: Result) -> Result {
 ///
 /// This will accuse any `#[repr(...)]` attribute wich is not equivalent to
 /// `#[repr(C)]`. No other layouts can safely implement the
-/// [`ReprC`](mem::alloc::ReprC) trait.
+/// [`ReprC`](../mem/alloc/trait.ReprC.html) trait.
 ///
 /// Also, if `#[repr(C)]` is not used at all, this will create another error
 /// at call site.

@@ -1,4 +1,4 @@
-//! Derive macros for [`ReprC`](mem::alloc::ReprC) trait.
+//! Derive macros for [`ReprC`](../mem/alloc/trait.ReprC.html) trait.
 #![feature(const_option)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
@@ -14,7 +14,7 @@ use proc_macro::TokenStream;
 use check::check_attributes;
 use derive::impl_repr_c;
 
-/// Derive macro for [`ReprC`](mem::alloc::ReprC) trait.
+/// Derive macro for [`ReprC`](../mem/alloc/trait.ReprC.html) trait.
 ///
 /// As explained in the documentation for the trait, `ReprC` can only be
 /// safely implemented for `struct`s marked as `#[repr(C)]`. This macro will
@@ -97,7 +97,7 @@ pub fn repr_c_derive(input: TokenStream) -> TokenStream {
 
 /// Unsafe version of [`ReprC`].
 ///
-/// This macro implements the [`ReprC`](mem::alloc::ReprC) trait without
+/// This macro implements the [`ReprC`](../mem/alloc/trait.ReprC.html) trait without
 /// checking for `#[repr(C)]` attributes and ignoring any invalid layout
 /// hint.
 ///
