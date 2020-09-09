@@ -71,3 +71,5 @@
 
 pub mod alloc;
 pub mod ptr;
+
+pub use repr_c_derive::{ReprC, Unsafe_ReprC};
