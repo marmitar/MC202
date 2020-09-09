@@ -131,7 +131,7 @@ impl PartialEq<Attribute> for AttrRepr {
                 .ok()
                 .filter(|group| {
                     group.delimiter() == Delimiter::Parenthesis
-                        && Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())
+                        && Parser::parse2(Punctuated::parse_terminated, group.stream())
                             .ok()
                             .filter(|parsed| parsed == &self.hints)
                             .is_some()
@@ -250,7 +250,7 @@ impl TryFrom<Attribute> for AttrRepr {
         let paren = Paren { span: group.span() };
 
         // the hint list must have no leading or trailing comma
-        let hints = Parser::parse2(Punctuated::parse_separated_nonempty, group.stream())?;
+        let hints = Parser::parse2(Punctuated::parse_terminated, group.stream())?;
 
         Ok(Self {
             pound,
@@ -272,7 +272,7 @@ impl Parse for AttrRepr {
         let bracket = syn::bracketed!(attribute in input);
         let ident_span = Ident::parse(&attribute).and_then(|ref id| repr_ident_span(id))?;
         let paren = syn::parenthesized!(arguments in attribute);
-        let hints = Punctuated::parse_separated_nonempty(&arguments)?;
+        let hints = Punctuated::parse_terminated(&arguments)?;
 
         Ok(Self {
             pound,
@@ -300,11 +300,11 @@ mod tests {
         assert!(parse("#[repr(align(8))]").is_ok());
         assert!(parse("#[repr(transparent, align(1))]").is_ok());
         assert!(parse("#[repr(rust, packed(u12))]").is_ok());
+        assert!(parse("#[repr(C,C,)]").is_ok());
+        assert!(parse("#[repr()]").is_ok());
 
-        assert!(parse("#[repr()]").is_err());
         assert!(parse("#[repr]").is_err());
         assert!(parse("#[repr(,)]").is_err());
-        assert!(parse("#[repr(C,C,)]").is_err());
         assert!(parse("#[attr]").is_err());
         assert!(parse("#![repr]").is_err());
     }
