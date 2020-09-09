@@ -307,7 +307,7 @@ pub unsafe trait ReprC {
                 // check validity of layouts
                 debug_assert!(this_layout == self_layout);
                 layout
-            }
+            },
         };
 
         // SAFETY: last_ptr points to an initialized object of Self, so the start fields

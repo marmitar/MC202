@@ -131,11 +131,11 @@ impl Layout {
     pub const fn from_size_align(size: usize, align: usize) -> Result<Self> {
         // 0 is not a power of 2
         if hint::unlikely!(!align.is_power_of_two()) {
-            return Err(LAYOUT_ERR);
+            return Err(LAYOUT_ERR)
         }
         // size_rounded_up = (size + align - 1) & !(align - 1);
         if hint::unlikely!(overflow_padded(size, align)) {
-            return Err(LAYOUT_ERR);
+            return Err(LAYOUT_ERR)
         }
 
         // SAFETY: checks above

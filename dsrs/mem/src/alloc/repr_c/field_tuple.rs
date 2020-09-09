@@ -195,8 +195,7 @@ impl private::Sealed for () {}
 unsafe impl FieldTuple for () {
     const ARITY: usize = count!();
     type Start = ();
-    /// There is no last type.
-    type Last = !;
+    type Last = ();
     const START_LAYOUT: Layout = layout_start!();
 
     #[inline]
@@ -215,28 +214,20 @@ unsafe impl FieldTuple for () {
         unsafe { std::ptr::read(ptr as *const ()) }
     }
 
-    /// Will always panic as never type should not exists.
-    ///
-    /// # Safety
-    ///
-    /// Always safe.
     #[inline]
-    unsafe fn write_last(_: *mut u8, _: *const !) {
-        // never type cannot have valid references
-        // SAFETY: happily panics
-        unsafe { assert_inhabited::<!>() }
+    unsafe fn write_last(ptr: *mut u8, last: *const ()) {
+        // just to check alignment
+        // SAFETY: the caller guarantees that `ptr` and `last` are
+        // valid, ie. nonnull and aligned
+        unsafe { std::ptr::copy(last, ptr as *mut (), 1) }
     }
 
-    /// Will always panic as never type should not exists.
-    ///
-    /// # Safety
-    ///
-    /// Always safe.
     #[inline]
-    unsafe fn read_last(_: *const u8, _: *mut !) {
-        // never type cannot have valid references
-        // SAFETY: happily panics
-        unsafe { assert_inhabited::<!>() }
+    unsafe fn read_last(ptr: *const u8, last: *mut ()) {
+        // just to check alignment
+        // SAFETY: the caller guarantees that `ptr` and `last` are
+        // valid, ie. nonnull and aligned
+        unsafe { std::ptr::copy(ptr as *const (), last, 1) }
     }
 }
 
