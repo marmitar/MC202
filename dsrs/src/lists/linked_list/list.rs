@@ -2,17 +2,30 @@ use super::node::Node;
 
 use mem::ptr::NonNull;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct LinkedList<T: ?Sized> {
     pub(super) head: Option<Box<Node<T>>>,
-    pub(super) tail: Option<NonNull<Node<T>>>
+    pub(super) tail: Option<NonNull<Node<T>>>,
+    pub(super) length: usize
 }
 
 impl<T: ?Sized> LinkedList<T> {
     #[must_use]
     #[inline]
     pub const fn new() -> Self {
-        Self { head: None, tail: None }
+        Self { head: None, tail: None, length: 0 }
+    }
+
+    #[must_use]
+    #[inline]
+    pub const fn len(&self) -> usize {
+        self.length
+    }
+
+    #[must_use]
+    #[inline]
+    pub const fn is_empty(&self) -> bool {
+        self.head.is_none()
     }
 
     #[must_use]
@@ -55,7 +68,8 @@ impl<T: ?Sized> LinkedList<T> {
             debug_assert!(self.tail.is_none());
             self.tail = Some(node.as_ptr())
         }
-        self.head = Some(node)
+        self.head = Some(node);
+        self.length += 1
     }
 
     #[inline]
@@ -70,6 +84,7 @@ impl<T: ?Sized> LinkedList<T> {
             debug_assert!(self.head.is_none());
             self.head = Some(node)
         }
+        self.length += 1
     }
 
     #[inline]
@@ -83,14 +98,16 @@ impl<T: ?Sized> LinkedList<T> {
         // SAFETY: next is None
         unsafe { self.push_node_tail(Node::build(data, None)) }
     }
-}
 
-impl<T: ?Sized> LinkedList<T> {
     #[must_use]
     #[inline]
     fn pop_node(&mut self) -> Option<Box<Node<T>>> {
         self.head.take().map(|mut node| {
             self.head = node.next.take();
+            if self.head.is_none() {
+                self.tail = None
+            }
+            self.length -= 1;
             node
         })
     }
@@ -119,7 +136,16 @@ impl<T> LinkedList<T> {
 
     #[must_use]
     #[inline]
-    pub fn pop_tail(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         self.pop_node().map(|node| node.data)
+    }
+}
+
+impl<T> Iterator for LinkedList<T> {
+    type Item = T;
+
+    #[inline]
+    fn next(&mut self) -> Option<T> {
+        self.pop()
     }
 }

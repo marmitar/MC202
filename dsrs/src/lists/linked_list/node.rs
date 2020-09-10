@@ -57,6 +57,23 @@ impl<T: ?Sized + Hash> Hash for Node<T> {
 impl<U, T: ?Sized + PartialEq<U>> PartialEq<Node<U>> for Node<T> {
     #[inline]
     fn eq(&self, other: &Node<U>) -> bool {
-        todo!()
+        if self.data != other.data {
+            return false
+        }
+
+        let (mut this, mut other) = (&self.next, &other.next);
+        loop {
+            let (next_this, next_other) = match (this, other) {
+                (Some(this), Some(other)) => (this, other),
+                (None, None) => break true,
+                (_, _) => break false
+            };
+
+            if next_this.data != next_other.data {
+                break false
+            }
+            this = &next_this.next;
+            other = &next_other.next;
+        }
     }
 }

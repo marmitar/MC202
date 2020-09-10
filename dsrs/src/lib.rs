@@ -1,6 +1,7 @@
 #![feature(unsafe_block_in_unsafe_fn)]
 #![feature(const_fn)]
 #![feature(const_mut_refs)]
+#![feature(const_option)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 #![allow(clippy::cargo_common_metadata)]
