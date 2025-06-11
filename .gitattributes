@@ -1,0 +1,4 @@
+*.res linguist-language=Text
+*/in/ linguist-vendored
+*/res/ linguist-vendored
+*/out/ linguist-vendored
